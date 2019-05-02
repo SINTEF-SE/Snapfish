@@ -5,8 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Snapfish.AlwaysOnTop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+        Title="MainWindow" Height="100.656" Width="231.781" Topmost="True" Top="0" ResizeMode="NoResize" WindowStyle="None">
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="LostFocus">
+            <BeginStoryboard>
+                <Storyboard>
+                    <BooleanAnimationUsingKeyFrames>
+                        <DiscreteBooleanKeyFrame KeyTime="0"
+                                                 Value="True" 
+                                                 Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Storyboard.TargetProperty="Topmost"/>
+                    </BooleanAnimationUsingKeyFrames>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+        <Button x:Name="recordButton" Content="Record" Width="100" Height="80" FontSize="20" Margin="0" />
+        <Button x:Name="sendButton" Content="Send" Height="80" FontSize="20" Width="100" Margin="10,0,0,0"/>
+
+    </StackPanel>
 </Window>
+

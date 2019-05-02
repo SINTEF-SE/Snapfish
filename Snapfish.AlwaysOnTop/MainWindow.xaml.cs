@@ -8,6 +8,7 @@
         public MainWindow()
         {
             InitializeComponent();
+            Left = System.Windows.SystemParameters.PrimaryScreenWidth - Width - 205;
         }
     }
 }
