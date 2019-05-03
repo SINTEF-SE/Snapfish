@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.Application", "Sna
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.AlwaysOnTop", "Snapfish.AlwaysOnTop\Snapfish.AlwaysOnTop.csproj", "{75482ACE-38A6-4451-A513-A8BE29A0919C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.WebApp", "Snapfish.WebApp\Snapfish.WebApp.csproj", "{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{75482ACE-38A6-4451-A513-A8BE29A0919C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75482ACE-38A6-4451-A513-A8BE29A0919C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75482ACE-38A6-4451-A513-A8BE29A0919C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

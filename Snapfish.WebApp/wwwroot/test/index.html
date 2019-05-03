@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>SV Plot :: WebGL</title>
+    <link rel="stylesheet" type="text/css" href="../css/plot.css" />
+    <style>
+        body {
+            background-color: #edede5;
+            margin: 0;
+            padding: 0;
+        }
+
+        #plots-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="plots-container">
+        <div id="sv-plot" class="plot"></div>
+        <div id="backscatter-plot" class="plot"></div>
+        <div id="time-controller" class='time-control'></div>
+    </div>
+    
+    <script src="../js/chroma.min.js"></script>
+    <script src="../js/papaparse.min.js"></script>
+
+    <script src="../js/shaders.js"></script>
+    <script src="../js/webgl-utils.js"></script>
+    <script src="../js/data.js"></script>
+    <script src="../js/plot.js"></script>
+    <script src="../js/time-control.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html>
