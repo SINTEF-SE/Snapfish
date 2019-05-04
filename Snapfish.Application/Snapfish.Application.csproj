@@ -8,4 +8,8 @@
       <PackageReference Include="System.Threading.Channels" Version="4.6.0-preview4.19212.13" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Snapfish.EkSeriesPubsubLibrary\Snapfish.EkSeriesPubsubLibrary.csproj" />
+    </ItemGroup>
+
 </Project>

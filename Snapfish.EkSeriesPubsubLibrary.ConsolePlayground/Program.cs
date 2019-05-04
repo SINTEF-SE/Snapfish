@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Channels;
 using Snapfish.BL.Models;
 
 namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
@@ -9,7 +10,12 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
         static void Main(string[] args)
         {
             EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
-            Queue<Echogram> EchogramQueue = new Queue<Echogram>();
+            Channel<Echogram> EchogramQueue = Channel.CreateBounded<Echogram>(new BoundedChannelOptions((1 << 12))
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
             while (true)
             {
                 string key = Console.ReadLine();

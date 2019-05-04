@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Snapfish.BL.Extensions;
@@ -102,7 +103,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         /*
          * THIS IS TRASH! TODO: REMOVE ME AND STUFF FURUTHER DOWN WHEN WE KNOW HOW WE ARE GOING TO IMPLEMENT THIS
          */
-        private static Queue<Echogram> _echogramSubscriptionQueue = null;
+        private static Channel<Echogram> _echogramSubscriptionQueue = null;
 
         public EkSeriesSocketDaemon()
         {
@@ -509,7 +510,11 @@ namespace Snapfish.EkSeriesPubsubLibrary
                             byte[] intermediateDataFormat = new byte[processedData.Data.Length * 2];
                             Buffer.BlockCopy(processedData.Data, 0, intermediateDataFormat, 0, (processedData.Data.Length * 2));
                             Echogram echogram = Echogram.FromArray(intermediateDataFormat);
-                            _echogramSubscriptionQueue.Enqueue(echogram);
+                            //_echogramSubscriptionQueue.Enqueue(echogram);
+                            if (!_echogramSubscriptionQueue.Writer.TryWrite(echogram))
+                            {
+                                _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
+                            }
                             Console.WriteLine("SEXY");
                             break;
                         case "RTR": //UNDOCUMENTED :: RETRANSMISSION PACKET
@@ -736,7 +741,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
-        public void CreateEchogramSubscription(ref Queue<Echogram> echogramSubscriptionQueue)
+        public void CreateEchogramSubscription(ref Channel<Echogram> echogramSubscriptionQueue)
         {
             _echogramSubscriptionQueue = echogramSubscriptionQueue;
             SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
