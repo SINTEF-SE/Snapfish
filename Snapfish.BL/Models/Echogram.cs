@@ -32,7 +32,7 @@ namespace Snapfish.BL.Models
             EchogramArray array = new EchogramArray();
             byte[] remainingDataFromReader = reader.ReadAllBytes();
             array.nEchogramElement = new short[30000];
-            Buffer.BlockCopy(remainingDataFromReader, 0, array.nEchogramElement, 0, array.nEchogramElement.Length);
+            Buffer.BlockCopy(remainingDataFromReader, 0, array.nEchogramElement, 0, remainingDataFromReader.Length);
             s.EchogramArray = array;
             return s;
         }

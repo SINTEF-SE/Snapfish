@@ -28,7 +28,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             public IPEndPoint e;
         }
         
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.70");
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.0.0.66");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
@@ -257,9 +257,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
             Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket),
                 TaskCreationOptions.LongRunning);
             Thread sendThread = new Thread(new ThreadStart(SendThreadMethod)) {IsBackground = true};
-            Thread receiveThread = new Thread(new ThreadStart(SubscriptionReceiver)) {IsBackground = true};
+            
+            IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
+            Socket subscriptionReceiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            subscriptionReceiver.Bind(e);
+            //Thread receiveThread = new Thread(new ThreadStart(SubscriptionReceiver)) {IsBackground = true};
             sendThread.Start();
-            receiveThread.Start();
+            Task.Factory.StartNew(() => SubscrptionSocketReceiver(subscriptionReceiver),
+                TaskCreationOptions.LongRunning);
+            //receiveThread.Start();
         }
 
         //TODO: Use size for RTR on 256, pop 128
@@ -300,7 +306,17 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 ReceiveDone.WaitOne();
             }
         }
-        
+
+
+        private void SubscrptionSocketReceiver(Socket receiveSocket)
+        {
+            Console.WriteLine("Listening for subscription messages");
+            while (true)
+            {
+                ReceiveSubscriptionData(receiveSocket);
+                SubscriptionReceiveEvent.WaitOne();
+            }
+        }
         
         private void SubscriptionReceiver()
         {
@@ -488,12 +504,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
             try
             {
                 Console.WriteLine("HERE WE GO! ");
-                UdpClient u = ((UdpState)(ar.AsyncState)).u;
-                IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
-                byte[] receiveBytes = u.EndReceive(ar, ref e);
-                if (receiveBytes.Length > 0)
+             //   UdpClient u = ((UdpState)(ar.AsyncState)).u;
+               // IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
+                StateObject state = (StateObject) ar.AsyncState;
+                Socket client = state.WorkSocket;
+                int receiveBytes = client.EndReceive(ar);
+                //byte[] receiveBytes = u.EndReceive(ar, ref e);
+                if (state.Buffer.Length > 0)
                 {
-                    string header = Encoding.ASCII.GetString(receiveBytes, 0, 3);
+                    string header = Encoding.ASCII.GetString(state.Buffer, 0, 3);
                     switch(header)
                    {
                         case "REQ":
@@ -506,13 +525,12 @@ namespace Snapfish.EkSeriesPubsubLibrary
                             Console.Write("Received RES IN SUB RECEIVER");
                             break;
                         case "PRD":
-                            Ek80ProcessedData processedData = new Ek80ProcessedData().FromArray(receiveBytes);
-                            byte[] intermediateDataFormat = new byte[processedData.Data.Length * 2];
-                            Buffer.BlockCopy(processedData.Data, 0, intermediateDataFormat, 0, (processedData.Data.Length * 2));
-                            Echogram echogram = Echogram.FromArray(intermediateDataFormat);
+                            Ek80ProcessedData processedData = new Ek80ProcessedData().FromArray(state.Buffer);
+                            Echogram echogram = Echogram.FromArray(processedData.DataAsBytes);
                             //_echogramSubscriptionQueue.Enqueue(echogram);
                             if (!_echogramSubscriptionQueue.Writer.TryWrite(echogram))
                             {
+                                Console.WriteLine("\"COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t\"");
                                 _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
                             }
                             Console.WriteLine("SEXY");
@@ -530,6 +548,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
             catch (Exception e)
             {
+                Console.WriteLine("SUP FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOL");
                 Console.WriteLine(e.ToString());
             }
         }

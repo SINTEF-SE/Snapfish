@@ -28,6 +28,7 @@ namespace Snapfish.Application
             daemon.HandshakeWithEkSeriesDevice();
             daemon.ConnectToRemoteEkDevice();
             daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
+            daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
         }
 
         public void AttachBufferToEchogramSubscription()
@@ -38,9 +39,12 @@ namespace Snapfish.Application
         public List<Echogram> CreateEchogramFileData()
         {
             //_boundedBuffer.Reader.ReadAsync()
-            Task consume = Consume(_boundedBuffer.Reader);
-            consume.RunSynchronously();
-            await Consume(_boundedBuffer.Reader);
+            //Task consume = Consume(_boundedBuffer.Reader);
+            //consume.Start();
+            Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
+            consumeTask.Wait();
+            List<Echogram> echos = consumeTask.Result;
+            return echos;
         }
 
         public static async Task ConsumeChannelData(ChannelReader<Echogram> c)
@@ -58,7 +62,7 @@ namespace Snapfish.Application
             catch (ChannelClosedException) {}
         }
         
-        private static async Task Consume(ChannelReader<Echogram> c)
+        private static async Task<List<Echogram>> Consume(ChannelReader<Echogram> c)
         {
             List<Echogram> retval = new List<Echogram>();
             while (await c.WaitToReadAsync())
@@ -66,7 +70,7 @@ namespace Snapfish.Application
                 while (c.TryRead(out Echogram item))
                 {
                     retval.Add(item);
-                    if (retval.Count > 1000)
+                    if (retval.Count > 1000) // Jic. I havent really tried the channel API
                     {
                         goto end;
                     }

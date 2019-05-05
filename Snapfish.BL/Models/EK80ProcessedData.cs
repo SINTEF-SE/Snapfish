@@ -12,6 +12,8 @@ namespace Snapfish.BL.Models
         public ushort TotalMsg;
         public ushort NoOfBytes;
         public ushort[] Data;
+        // THIS IS NOT IN THE MANUAL BUT FOR FURTHER TRANSMISSION WE ACTUALLY NEED AN INTERMEDIATE FORMAT SO THIS 'ADDED' DATA is needed and thus not redundant
+        public byte[] DataAsBytes;
 
         public Ek80ProcessedData FromArray(byte[] bytes)
         {
@@ -23,9 +25,9 @@ namespace Snapfish.BL.Models
             s.CurrentMsg = reader.ReadUInt16();
             s.TotalMsg = reader.ReadUInt16();
             s.NoOfBytes = reader.ReadUInt16();
-            byte[] data = reader.ReadBytes(s.NoOfBytes);
-            s.Data = new ushort[(int) Math.Ceiling((double) (data.Length / 2))];
-            Buffer.BlockCopy(data, 0, s.Data, 0, data.Length);
+            s.DataAsBytes = reader.ReadBytes(s.NoOfBytes);
+            s.Data = new ushort[(int) Math.Ceiling((double) (s.DataAsBytes.Length / 2))];
+            Buffer.BlockCopy(s.DataAsBytes, 0, s.Data, 0, s.DataAsBytes.Length);
             return s;
         }
     }

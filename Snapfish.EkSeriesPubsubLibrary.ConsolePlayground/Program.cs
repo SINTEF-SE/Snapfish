@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
 using Snapfish.BL.Models;
 
@@ -41,6 +42,12 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 } else if (key.StartsWith("i"))
                 {
                     daemon.CreateEchogramSubscription(ref EchogramQueue);
+                } else if (key.StartsWith("j"))
+                {
+                    daemon.HandshakeWithEkSeriesDevice();
+                    daemon.ConnectToRemoteEkDevice();
+                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
+                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
                 }
             }
         }
