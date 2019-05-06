@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 
 namespace Snapfish.EkSeriesPubsubLibrary.Domain
@@ -7,5 +8,6 @@ namespace Snapfish.EkSeriesPubsubLibrary.Domain
         public Socket WorkSocket = null;
         public const int BufferSize = 1 << 12;
         public byte[] Buffer = new byte[BufferSize];
+        public bool HasBeenProcessed = true;
     }
 }

@@ -21,7 +21,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
      * TODO: Implement cleanup AND CLEAN UP THE CODE. BECAUSE JEEEEEZ
      */
     public class EkSeriesSocketDaemon
-    {        
+    {
         private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.70");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
@@ -30,6 +30,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static readonly ManualResetEvent SendQueueEmptied = new ManualResetEvent(false);
         private static readonly object SendLock = new object();
         private static readonly int QueueSize = 256;
+        private static readonly int MaximumIncomingDatagrams = 1 << 9;
 
         private const int RemotePort = 37655;
         private const int _receivePort = 8572;
@@ -38,6 +39,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private ServerInfo _remoteEkSeriesInfo;
         private static ConnectRequestReponseStruct _connectRequestReponseStruct;
         private static ConnectionToEkSeriesDevice _currentActiveConnection; //TODO: LIST?
+
+        /*
+         * Max 100 concurrent 'connections' actually UDP datagrams incoming, because there is a bug in the socket implmentation in c# which makes the overlapped memory region un-freeable
+         */
+        private static StateObject[]
+            _stateObjects = new StateObject[MaximumIncomingDatagrams];
+
+        private static uint _previousSelectedStateObject = 0;
+
         private static Boolean isRetransmitting = false;
         private static bool _subscriptionMessageReceived = false;
 
@@ -58,8 +68,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         #region SubscriptionParameters
 
-        
-        
         private EchogramConfiguration _echogramConfiguration = new EchogramConfiguration();
 
         #endregion
@@ -70,9 +78,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         private Socket _subscriptionReceiver;
         private UdpClient _subscriptionReceiveClient;
-        
+
         #endregion
-        
+
         #endregion
 
 
@@ -92,8 +100,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         // This might be moved/removed
         //private readonly IEventBus _eventBus = null;
-        
-        
+
+
         /*
          * THIS IS TRASH! TODO: REMOVE ME AND STUFF FURUTHER DOWN WHEN WE KNOW HOW WE ARE GOING TO IMPLEMENT THIS
          */
@@ -104,15 +112,19 @@ namespace Snapfish.EkSeriesPubsubLibrary
             InitializeLogger();
             _logger.Info(
                 "===================================|Booting up snapfish daemon|===================================");
+            for (int i = 0; i < MaximumIncomingDatagrams; i++)
+            {
+                _stateObjects[i] = new StateObject();
+            }
         }
-        
-    /*   public EkSeriesSocketDaemon(IEventBus eventBus)
-        {
-            _eventBus = eventBus;
-            InitializeLogger();
-            _logger.Info(
-                "===================================|Booting up snapfish daemon|===================================");
-        } */
+
+        /*   public EkSeriesSocketDaemon(IEventBus eventBus)
+            {
+                _eventBus = eventBus;
+                InitializeLogger();
+                _logger.Info(
+                    "===================================|Booting up snapfish daemon|===================================");
+            } */
 
         #region Logging
 
@@ -140,16 +152,17 @@ namespace Snapfish.EkSeriesPubsubLibrary
         {
             try
             {
-                _logger.Info("----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})")/*, eventMessage.Id, Program.AppName, eventMessage)*/;
+                _logger.Info(
+                    "----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})") /*, eventMessage.Id, Program.AppName, eventMessage)*/;
                 //_eventBus.Publish(eventMessage);
             }
             catch (Exception ex)
             {
-                _logger.Throw(ex, "ERROR Publishing integration event: {IntegrationEventId} from {AppName}"/*, eventMessage.Id, Program.AppName*/);
+                _logger.Throw(ex, "ERROR Publishing integration event: {IntegrationEventId} from {AppName}" /*, eventMessage.Id, Program.AppName*/);
                 throw;
             }
         }
-        
+
         public void HandshakeWithEkSeriesDevice()
         {
             IPEndPoint remoteEp = new IPEndPoint(Ek80Endpoint, RemotePort);
@@ -251,7 +264,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket),
                 TaskCreationOptions.LongRunning);
             Thread sendThread = new Thread(new ThreadStart(SendThreadMethod)) {IsBackground = true};
-            
+
             IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
             Socket subscriptionReceiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             subscriptionReceiver.Bind(e);
@@ -311,7 +324,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 SubscriptionReceiveEvent.WaitOne();
             }
         }
-        
+
         private void SendThreadMethod()
         {
             while (true)
@@ -482,8 +495,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
             try
             {
                 Console.WriteLine("HERE WE GO! ");
-             //   UdpClient u = ((UdpState)(ar.AsyncState)).u;
-               // IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
+                //   UdpClient u = ((UdpState)(ar.AsyncState)).u;
+                // IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
                 StateObject state = (StateObject) ar.AsyncState;
                 Socket client = state.WorkSocket;
                 int receiveBytes = client.EndReceive(ar);
@@ -491,8 +504,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 if (state.Buffer.Length > 0)
                 {
                     string header = Encoding.ASCII.GetString(state.Buffer, 0, 3);
-                    switch(header)
-                   {
+                    switch (header)
+                    {
                         case "REQ":
                             Console.Write("Received REQ IN SUB RECEIVER");
                             break;
@@ -511,6 +524,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 Console.WriteLine("\"COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t\"");
                                 _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
                             }
+
                             Console.WriteLine("SEXY");
                             break;
                         case "RTR": //UNDOCUMENTED :: RETRANSMISSION PACKET
@@ -522,6 +536,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
                             break;
                     }
                 }
+
+                state.HasBeenProcessed = true;
                 SubscriptionReceiveEvent.Set();
             }
             catch (Exception e)
@@ -530,7 +546,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 Console.WriteLine(e.ToString());
             }
         }
-        
+
         private static void ReceiveCallback(IAsyncResult ar)
         {
             try
@@ -620,6 +636,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                     }
                 }
 
+                state.HasBeenProcessed = true;
                 ReceiveDone.Set();
             }
             catch (Exception e)
@@ -629,14 +646,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
         }
 
         #region GENERAL_PURPOSE_ASYNC_SOCKET_FUNCTIONALITY
-        
+
         private static void ReceiveSubscriptionData(Socket server)
         {
-           
             try
             {
                 // Create the state object.
-                StateObject state = new StateObject {WorkSocket = server};
+                StateObject state = GetAvailableStateObject();
+                state.WorkSocket = server;
+                state.HasBeenProcessed = false;
                 //Console.WriteLine("Receiving subscription data from: " + state.WorkSocket.RemoteEndPoint.ToString());
                 server.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(SubscriptionReceiverCallback), state);
@@ -644,15 +662,41 @@ namespace Snapfish.EkSeriesPubsubLibrary
             catch (Exception e)
             {
                 _logger.Throw(e, "Exception occured during ReceiveSubscriptionData: ");
-            } 
+            }
+        }
+
+        //Just round robin until we find state object
+        private static StateObject GetAvailableStateObject()
+        {
+            try
+            {
+                StateObject retval = _stateObjects[++_previousSelectedStateObject % MaximumIncomingDatagrams];
+                while (!retval.HasBeenProcessed)
+                {
+                    retval = _stateObjects[++_previousSelectedStateObject % MaximumIncomingDatagrams];
+                }
+
+                return retval;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw e;
+            }
+            
+
+            //return retval;
         }
         
         private static void Receive(Socket client)
         {
             try
             {
-                // Create the state object.  
-                StateObject state = new StateObject {WorkSocket = client};
+                // Create the state object.
+                StateObject state = GetAvailableStateObject();
+                state.WorkSocket = client;
+                state.HasBeenProcessed = false;
+                //StateObject state = new StateObject {WorkSocket = client, HasBeenProcessed = false};
                 client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
                     ReceiveCallback, state);
             }
