@@ -6,6 +6,6 @@ namespace Snapfish.EkSeriesPubsubLibrary.Domain
     {
         public Socket WorkSocket = null;
         public const int BufferSize = 1 << 12;
-        public readonly byte[] Buffer = new byte[BufferSize];
+        public byte[] Buffer = new byte[BufferSize];
     }
 }

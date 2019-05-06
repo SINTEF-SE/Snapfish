@@ -21,14 +21,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
      * TODO: Implement cleanup AND CLEAN UP THE CODE. BECAUSE JEEEEEZ
      */
     public class EkSeriesSocketDaemon
-    {
-        private struct UdpState
-        {
-            public UdpClient u;
-            public IPEndPoint e;
-        }
-        
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.0.0.66");
+    {        
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.70");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
@@ -316,22 +310,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 ReceiveSubscriptionData(receiveSocket);
                 SubscriptionReceiveEvent.WaitOne();
             }
-        }
-        
-        private void SubscriptionReceiver()
-        {
-            IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
-            UdpClient u = new UdpClient(e);
-            UdpState s = new UdpState {e = e, u = u};
-            //_subscriptionMessageReceived
-            Console.WriteLine("Listening for subscription messages");
-            while (true)
-            {
-                //ReceiveSubscriptionData(u, e);
-                u.BeginReceive(SubscriptionReceiverCallback, s);
-                SubscriptionReceiveEvent.WaitOne();
-            }
-            // ReSharper disable once FunctionNeverReturns
         }
         
         private void SendThreadMethod()
@@ -652,21 +630,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         #region GENERAL_PURPOSE_ASYNC_SOCKET_FUNCTIONALITY
         
-        private static void ReceiveSubscriptionData(UdpClient client, IPEndPoint endpoint)
-        {
-            try
-            {
-                // Create the state object.
-                UdpState state = new UdpState() {u = client, e = endpoint};
-                var byteFace = client.Receive(ref state.e);
-                Console.WriteLine(byteFace);
-            }
-            catch (Exception e)
-            {
-                _logger.Throw(e, "Exception occured during ReceiveSubscriptionData: ");
-            } 
-        }
-        
         private static void ReceiveSubscriptionData(Socket server)
         {
            
@@ -691,7 +654,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 // Create the state object.  
                 StateObject state = new StateObject {WorkSocket = client};
                 client.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(ReceiveCallback), state);
+                    ReceiveCallback, state);
             }
             catch (Exception e)
             {

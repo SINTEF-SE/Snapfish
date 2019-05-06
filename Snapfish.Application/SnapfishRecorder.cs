@@ -9,7 +9,7 @@ namespace Snapfish.Application
 {
     public class SnapfishRecorder
     {
-        private const int _bufferSize = 1 << 12;  
+        private const int _bufferSize = 1 << 8;  
         private static Channel<Echogram> _boundedBuffer;
         EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
 
@@ -38,9 +38,6 @@ namespace Snapfish.Application
 
         public List<Echogram> CreateEchogramFileData()
         {
-            //_boundedBuffer.Reader.ReadAsync()
-            //Task consume = Consume(_boundedBuffer.Reader);
-            //consume.Start();
             Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
             consumeTask.Wait();
             List<Echogram> echos = consumeTask.Result;

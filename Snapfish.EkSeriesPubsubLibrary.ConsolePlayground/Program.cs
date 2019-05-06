@@ -11,7 +11,7 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
         static void Main(string[] args)
         {
             EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
-            Channel<Echogram> EchogramQueue = Channel.CreateBounded<Echogram>(new BoundedChannelOptions((1 << 12))
+            Channel<Echogram> EchogramQueue = Channel.CreateBounded<Echogram>(new BoundedChannelOptions((1 << 8))
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,

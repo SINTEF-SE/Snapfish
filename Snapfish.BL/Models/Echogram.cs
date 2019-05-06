@@ -31,7 +31,7 @@ namespace Snapfish.BL.Models
             
             EchogramArray array = new EchogramArray();
             byte[] remainingDataFromReader = reader.ReadAllBytes();
-            array.nEchogramElement = new short[30000];
+            array.nEchogramElement = new short[(int) Math.Ceiling((double) (remainingDataFromReader.Length / 2))]; //I know the documentation says new short[30000], but the ram!
             Buffer.BlockCopy(remainingDataFromReader, 0, array.nEchogramElement, 0, remainingDataFromReader.Length);
             s.EchogramArray = array;
             return s;
