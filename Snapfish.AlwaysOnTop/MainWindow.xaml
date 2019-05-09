@@ -21,8 +21,8 @@
         </EventTrigger>
     </Window.Triggers>
     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
-        <Button x:Name="recordButton" Content="Record" Width="100" Height="80" FontSize="20" Margin="0" />
-        <Button x:Name="sendButton" Content="Send" Height="80" FontSize="20" Width="100" Margin="10,0,0,0"/>
+        <Image Height="100" Width="100" Source="fhf_logo.png" Margin="0,15,0,0"/>
+        <Button x:Name="sendButton" Content="Snap" Height="80" FontSize="20" Width="100" Margin="10,10,0,0"/>
 
     </StackPanel>
 </Window>
