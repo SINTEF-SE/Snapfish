@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Snapfish.Application;
 using Snapfish.BL.Models;
 
@@ -11,6 +12,7 @@ namespace Snapfish.Console
         {
             SnapfishRecorder recorder = new SnapfishRecorder();
             recorder.InstallDaemon();
+            Thread.Sleep(1000);
             recorder.AttachBufferToEchogramSubscription();
             while (true)
             {

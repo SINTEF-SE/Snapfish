@@ -4,7 +4,7 @@ namespace Snapfish.BL.Models
 {
     public enum ParameterType
     {
-        GetApplicationName, GetChannelId, ClientTimeoutLimit
+        GetApplicationName, GetChannelId, ClientTimeoutLimit, ApplicationType
         
     }
 
@@ -20,6 +20,8 @@ namespace Snapfish.BL.Models
                     return "TransceiverMgr/Channels";
                 case ParameterType.ClientTimeoutLimit:
                     return "RemoteCommandDispatcher/ClientTimeoutLimit";
+                case ParameterType.ApplicationType:
+                    return "RemoteCommandDispatcher / BrowseInfoProvider / ApplicationType";
                 default:
                     throw new NotImplementedException("Invalid ParameterName");
             }       

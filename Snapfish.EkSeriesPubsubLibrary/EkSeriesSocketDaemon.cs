@@ -30,7 +30,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static readonly ManualResetEvent SendQueueEmptied = new ManualResetEvent(false);
         private static readonly object SendLock = new object();
         private static readonly int QueueSize = 256;
-        private static readonly int MaximumIncomingDatagrams = 1 << 9;
+        private static readonly int MaximumIncomingDatagrams = 1 << 8;
 
         private const int RemotePort = 37655;
         private const int _receivePort = 8572;
@@ -45,8 +45,10 @@ namespace Snapfish.EkSeriesPubsubLibrary
          */
         private static StateObject[]
             _stateObjects = new StateObject[MaximumIncomingDatagrams];
+        private static StateObject[] _subscriptionStateObjects = new StateObject[MaximumIncomingDatagrams];
 
         private static uint _previousSelectedStateObject = 0;
+        private static uint _previousSelectedSubscriptionStateObjectIndex = 0;
 
         private static Boolean isRetransmitting = false;
         private static bool _subscriptionMessageReceived = false;
@@ -115,6 +117,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             for (int i = 0; i < MaximumIncomingDatagrams; i++)
             {
                 _stateObjects[i] = new StateObject();
+                _subscriptionStateObjects[i] = new StateObject();
             }
         }
 
@@ -271,7 +274,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             //Thread receiveThread = new Thread(new ThreadStart(SubscriptionReceiver)) {IsBackground = true};
             sendThread.Start();
             Task.Factory.StartNew(() => SubscrptionSocketReceiver(subscriptionReceiver),
-                TaskCreationOptions.LongRunning);
+                TaskCreationOptions.RunContinuationsAsynchronously);
             //receiveThread.Start();
         }
 
@@ -317,7 +320,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         private void SubscrptionSocketReceiver(Socket receiveSocket)
         {
-            Console.WriteLine("Listening for subscription messages");
             while (true)
             {
                 ReceiveSubscriptionData(receiveSocket);
@@ -494,13 +496,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
         {
             try
             {
-                Console.WriteLine("HERE WE GO! ");
-                //   UdpClient u = ((UdpState)(ar.AsyncState)).u;
-                // IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
                 StateObject state = (StateObject) ar.AsyncState;
                 Socket client = state.WorkSocket;
                 int receiveBytes = client.EndReceive(ar);
-                //byte[] receiveBytes = u.EndReceive(ar, ref e);
                 if (state.Buffer.Length > 0)
                 {
                     string header = Encoding.ASCII.GetString(state.Buffer, 0, 3);
@@ -524,8 +522,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 Console.WriteLine("\"COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t\"");
                                 _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
                             }
-
-                            Console.WriteLine("SEXY");
                             break;
                         case "RTR": //UNDOCUMENTED :: RETRANSMISSION PACKET
                             Console.Write("Received RTR IN SUB");
@@ -596,14 +592,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                             _applicationName = paramValue?.Element("value")?.Value;
                                             break;
                                         case ParameterType.GetChannelId:
-                                            Console.WriteLine(paramValue?.Value);
                                             _channelID = paramValue?.Value;
                                             break;
                                     }
 
-                                    string value = paramValue?.Element("value")?.Value;
-                                    string time = paramValue?.Element("time")?.Value;
-                                    Console.WriteLine(value + " :::: " + time);
+//                                    string value = paramValue?.Element("value")?.Value;
+  //                                  string time = paramValue?.Element("time")?.Value;
+    //                                Console.WriteLine(value + " :::: " + time);
                                     break;
                                 case "SubscribeResponse":
                                     Console.WriteLine("COOL STUFF");
@@ -652,7 +647,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             try
             {
                 // Create the state object.
-                StateObject state = GetAvailableStateObject();
+                StateObject state = GetAvailableSubscriptionStateObject();
                 state.WorkSocket = server;
                 state.HasBeenProcessed = false;
                 //Console.WriteLine("Receiving subscription data from: " + state.WorkSocket.RemoteEndPoint.ToString());
@@ -665,6 +660,24 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
+        private static StateObject GetAvailableSubscriptionStateObject()
+        {
+            try
+            {
+                StateObject retval = _subscriptionStateObjects[++_previousSelectedSubscriptionStateObjectIndex % MaximumIncomingDatagrams];
+                while (!retval.HasBeenProcessed)
+                {
+                    retval = _subscriptionStateObjects[++_previousSelectedSubscriptionStateObjectIndex % MaximumIncomingDatagrams];
+                }
+                return retval;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw e;
+            }            
+        }
+        
         //Just round robin until we find state object
         private static StateObject GetAvailableStateObject()
         {
@@ -675,7 +688,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 {
                     retval = _stateObjects[++_previousSelectedStateObject % MaximumIncomingDatagrams];
                 }
-
                 return retval;
             }
             catch (Exception e)
@@ -683,9 +695,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 Console.WriteLine(e);
                 throw e;
             }
-            
-
-            //return retval;
         }
         
         private static void Receive(Socket client)

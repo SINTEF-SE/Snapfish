@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Snapfish.BL.Models;
@@ -9,7 +8,7 @@ namespace Snapfish.Application
 {
     public class SnapfishRecorder
     {
-        private const int _bufferSize = 1 << 8;  
+        private const int _bufferSize = 1 << 8;
         private static Channel<Echogram> _boundedBuffer;
         EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
 
@@ -38,12 +37,25 @@ namespace Snapfish.Application
 
         public List<Echogram> CreateEchogramFileData()
         {
-            Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
+            /*
+             * Something different
+             */
+            List<Echogram> echos = await Task.Run(() => ConsumeChannel(_boundedBuffer.Reader)).ContinueWith(task => CreateEchogramFile(task));
+            
+            
+            
+            
+            /*Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
             consumeTask.Wait();
-            List<Echogram> echos = consumeTask.Result;
+            List<Echogram> echos = consumeTask.Result;*/
             return echos;
         }
 
+        static List<Echogram> CreateEchogramFile(Task<List<Echogram>> task)
+        {
+            
+        }
+        
         public static async Task ConsumeChannelData(ChannelReader<Echogram> c)
         {
             try
@@ -53,12 +65,23 @@ namespace Snapfish.Application
                 {
                     Echogram item = await c.ReadAsync();
                     retval.Add(item);
-                    
                 }
             }
-            catch (ChannelClosedException) {}
+            catch (ChannelClosedException)
+            {
+            }
         }
-        
+
+        public static List<Echogram> ConsumeChannel(ChannelReader<Echogram> channel)
+        {
+            List<Echogram> retval = new List<Echogram>();
+            while (channel.TryRead(out Echogram item))
+            {
+                retval.Add(item);
+            }
+            return retval;
+        }
+
         private static async Task<List<Echogram>> Consume(ChannelReader<Echogram> c)
         {
             List<Echogram> retval = new List<Echogram>();
@@ -73,6 +96,7 @@ namespace Snapfish.Application
                     }
                 }
             }
+
             end:
             return retval;
         }
