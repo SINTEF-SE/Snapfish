@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Snapfish.API.Models
+{
+    public class EchogramInfo
+    {
+        public long Id { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
+        public string Biomass { get; set; }
+        public string Source { get; set; }
+
+        public string EchogramUrl { get; set; }
+
+    }
+}
