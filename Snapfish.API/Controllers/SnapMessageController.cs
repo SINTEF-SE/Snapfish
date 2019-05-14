@@ -18,21 +18,26 @@ namespace Snapfish.API.Controllers
         public SnapMessageController(SnapContext context)
         {
             _context = context;
-            if (_context.SnapMessages.Count() == 0)
+/*            if (_context.SnapMessages.Count() == 0)
             {
                 _context.SnapMessages.Add(new SnapMessage { Title = "First snap!", Sender = "Ola", SendTimestamp = DateTime.Now });
                 _context.SaveChanges();
-            }
+            }*/
 
         }
-
+        
         // GET: api/SnapMessage
         [HttpGet]
-        public async Task<IEnumerable<SnapMessage>> GetSnapMessages()
+        public async Task<IEnumerable<SnapMessage>> GetSnapMessages([FromQuery] bool withEchogram=false)
         {
+            if (withEchogram)
+            {
+                return await _context.SnapMessages.Include(s => s.EchogramInfo).ToListAsync();
+
+            }
             return await _context.SnapMessages.ToListAsync(); 
         }
-
+        
         // GET: api/SnapMessage/5
         [HttpGet("{id}")]
         public async Task<ActionResult<SnapMessage>> GetSnapMessage(long id)
@@ -54,7 +59,7 @@ namespace Snapfish.API.Controllers
             _context.SnapMessages.Add(item);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSnapMessage), new { id = item.Id }, item);
+            return CreatedAtAction(nameof(GetSnapMessage), new { id = item.ID }, item);
         }
 
         // PUT: api/SnapMessage/5

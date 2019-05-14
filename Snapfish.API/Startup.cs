@@ -45,7 +45,7 @@ namespace Snapfish.API
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            //TODO re-add app.UseHttpsRedirection();
             app.UseMvc();
         }
     }

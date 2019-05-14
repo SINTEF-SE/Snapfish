@@ -1,0 +1,5 @@
+TODOs 
+
+Replace configuration changes with more suitable values. Original values for launchSettings were:
+      "applicationUrl": "https://localhost:5001;http://localhost:5000",
+

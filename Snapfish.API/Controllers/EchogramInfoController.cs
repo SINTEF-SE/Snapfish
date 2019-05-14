@@ -55,7 +55,7 @@ namespace Snapfish.API.Controllers
             _context.EchogramInfos.Add(item);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetEchogramInfo), new { id = item.Id }, item);
+            return CreatedAtAction(nameof(GetEchogramInfo), new { id = item.ID }, item);
         }
 
         /*

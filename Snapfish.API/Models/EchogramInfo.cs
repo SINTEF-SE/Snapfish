@@ -7,7 +7,8 @@ namespace Snapfish.API.Models
 {
     public class EchogramInfo
     {
-        public long Id { get; set; }
+        public long ID { get; set; }
+        public long UserID { get; set; }
         public DateTime Timestamp { get; set; }
         public string Latitude { get; set; }
         public string Longitude { get; set; }
