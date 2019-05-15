@@ -56,6 +56,9 @@ namespace Snapfish.API.Controllers
         [HttpPost]
         public async Task<ActionResult<SnapMessage>> PostSnapMessage(SnapMessage item)
         {
+            item.ID = 0;
+            item.EchogramInfo = null;
+            item.SendTimestamp = DateTime.Now;
             _context.SnapMessages.Add(item);
             await _context.SaveChangesAsync();
 
