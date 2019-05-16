@@ -20,7 +20,7 @@ namespace Snapfish.Console
                 string key = System.Console.ReadLine();
                 if (key.StartsWith("c")) //HANDSHAKE
                 {
-                    List<Echogram> echos = recorder.CreateEchogramFileData();
+                    List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     if (echos != null)
                     {
                         //COol

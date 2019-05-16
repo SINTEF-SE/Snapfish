@@ -22,7 +22,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
      */
     public class EkSeriesSocketDaemon
     {
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.70");
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.0.0.66");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);

@@ -35,15 +35,12 @@ namespace Snapfish.Application
             daemon.CreateEchogramSubscription(ref _boundedBuffer);
         }
 
-        public List<Echogram> CreateEchogramFileData()
+        public async Task<List<Echogram>> /*List<Echogram>*/ CreateEchogramFileData()
         {
             /*
              * Something different
              */
             List<Echogram> echos = await Task.Run(() => ConsumeChannel(_boundedBuffer.Reader)).ContinueWith(task => CreateEchogramFile(task));
-            
-            
-            
             
             /*Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
             consumeTask.Wait();
@@ -53,7 +50,11 @@ namespace Snapfish.Application
 
         static List<Echogram> CreateEchogramFile(Task<List<Echogram>> task)
         {
+            List<Echogram> EchoYolo = task.Result;
             
+            //Do stuff, then return the 'file'
+            // Not sure what to do
+            return EchoYolo;
         }
         
         public static async Task ConsumeChannelData(ChannelReader<Echogram> c)
@@ -75,9 +76,15 @@ namespace Snapfish.Application
         public static List<Echogram> ConsumeChannel(ChannelReader<Echogram> channel)
         {
             List<Echogram> retval = new List<Echogram>();
+            int i = 0;
             while (channel.TryRead(out Echogram item))
             {
                 retval.Add(item);
+                //TODO: Dont do this, but you know. Its kinda of how we got to do this atm
+                if (++i > _bufferSize)
+                {
+                    break;
+                }
             }
             return retval;
         }
