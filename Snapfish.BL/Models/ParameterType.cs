@@ -68,7 +68,9 @@ namespace Snapfish.BL.Models
                 case ParameterType.EquivalentBeamAngle:
                     return "TransceiverMgr/" + channelId + "EquivalentBeamAngle";
                 case ParameterType.AngleSensitivityAlongship:
-                    return "TransceiverMgr/" + channelId + "AngleSensitivityAlongship";
+                    return "TransceiverMgr/" + channelId + "AngleSensitivityAlongship"; //AngleSensitivityAthwartship
+                case ParameterType.AngleSensitivityAthwartship:
+                    return "TransceiverMgr/" + channelId + "AngleSensitivityAthwartship";
                 case ParameterType.BeamWidthAlongship:
                     return "TransceiverMgr/" + channelId + "BeamWidthAlongship";
                 case ParameterType.AngleOffsetAlongship:
