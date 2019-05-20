@@ -32,7 +32,7 @@ namespace Snapfish.BL.Models
         Distance,
         NoiseEstimate,
         ClientTimeoutLimit,
-        ApplicationType
+        ApplicationType,
     }
 
     public static class ParameterTypeExtensions
@@ -64,21 +64,21 @@ namespace Snapfish.BL.Models
                 case ParameterType.SoundVelocity:
                     return "TransceiverMgr/" + channelId + "/SoundVelocity";
                 case ParameterType.TransducerName:
-                    return "TransceiverMgr/" + channelId + "TransducerName";
+                    return "TransceiverMgr/" + channelId + "/TransducerName";
                 case ParameterType.EquivalentBeamAngle:
-                    return "TransceiverMgr/" + channelId + "EquivalentBeamAngle";
+                    return "TransceiverMgr/" + channelId + "/EquivalentBeamAngle";
                 case ParameterType.AngleSensitivityAlongship:
-                    return "TransceiverMgr/" + channelId + "AngleSensitivityAlongship"; //AngleSensitivityAthwartship
+                    return "TransceiverMgr/" + channelId + "/AngleSensitivityAlongship"; //AngleSensitivityAthwartship
                 case ParameterType.AngleSensitivityAthwartship:
-                    return "TransceiverMgr/" + channelId + "AngleSensitivityAthwartship";
+                    return "TransceiverMgr/" + channelId + "/AngleSensitivityAthwartship";
                 case ParameterType.BeamWidthAlongship:
-                    return "TransceiverMgr/" + channelId + "BeamWidthAlongship";
+                    return "TransceiverMgr/" + channelId + "/BeamWidthAlongship";
                 case ParameterType.AngleOffsetAlongship:
-                    return "TransceiverMgr/" + channelId + "AngleOffsetAlongship";
+                    return "TransceiverMgr/" + channelId + "/AngleOffsetAlongship";
                 case ParameterType.Gain:
-                    return "TransceiverMgr/" + channelId + "Gain";
+                    return "TransceiverMgr/" + channelId + "/Gain";
                 case ParameterType.SaCorrection:
-                    return "TransceiverMgr/" + channelId + "SaCorrection";
+                    return "TransceiverMgr/" + channelId + "/SaCorrection";
                 case ParameterType.PingTime:
                     return "TransceiverMgr/PingTime";
                 case ParameterType.Latitude:
@@ -98,7 +98,7 @@ namespace Snapfish.BL.Models
                 case ParameterType.NoiseEstimate:
                     return "ProcessingMgr/" + channelId + "/ChannelProcessingCommon/NoiseEstimate";
                 case ParameterType.ApplicationType:
-                    return "RemoteCommandDispatcher / BrowseInfoProvider / ApplicationType";
+                    return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationType";
                 default:
                     throw new NotImplementedException("Invalid ParameterName");
             }

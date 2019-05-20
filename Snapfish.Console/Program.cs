@@ -16,7 +16,7 @@ namespace Snapfish.Console
             recorder.AttachBufferToEchogramSubscription();
             while (true)
             {
-                
+                // CreateSampleDataSubscription
                 string key = System.Console.ReadLine();
                 if (key.StartsWith("c")) //HANDSHAKE
                 {
@@ -26,7 +26,10 @@ namespace Snapfish.Console
                         //COol
                         System.Console.WriteLine("uuh");
                     }
-                }   
+                }  else if (key.StartsWith("b"))
+                {
+                    List<SampleDataContainerClass> sampleData = recorder.CreateSampleDataSubscription
+                }  
             }
         }
     }
