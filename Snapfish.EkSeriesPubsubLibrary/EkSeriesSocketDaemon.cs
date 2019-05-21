@@ -64,6 +64,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         private static ParameterType _currentParameterRequestType;
         private static string _applicationName;
+        private static string _applicationType;
+        private static string _applicationDescription;
+        private static string _applicationVersion;
         private static string _channelID;
 
         //TODO: Make these configurable and storable
@@ -108,6 +111,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
          * THIS IS TRASH! TODO: REMOVE ME AND STUFF FURUTHER DOWN WHEN WE KNOW HOW WE ARE GOING TO IMPLEMENT THIS
          */
         private static Channel<Echogram> _echogramSubscriptionQueue = null;
+        private static Channel<SampleDataContainerClass> _sampleDataSubscriptionQueue = null;
 
         public EkSeriesSocketDaemon()
         {
@@ -348,6 +352,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 case EkSeriesDataSubscriptionType.TargetStrengthTsDetectionChirp:
                     break;
                 case EkSeriesDataSubscriptionType.SampleData:
+                    retval = "SampleData," + "ChannelID=" + _channelID + ",SampleDataType=Power,Range=100,RangeStart=10,";
                     break;
                 case EkSeriesDataSubscriptionType.Echogram:
                     retval = "Echogram," + "PixelCount=" + _echogramConfiguration.PixelCount + "," + "ChannelID=" + _channelID + "," + "Range=" + _echogramConfiguration.Range +
@@ -781,6 +786,14 @@ namespace Snapfish.EkSeriesPubsubLibrary
             _echogramSubscriptionQueue = echogramSubscriptionQueue;
             SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
         }
+        
+        public void CreateSampleDataSubscription(ref Channel<SampleDataContainerClass> sampleDataSubscriptionQueue)
+        {
+            _sampleDataSubscriptionQueue = sampleDataSubscriptionQueue;
+            SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
+        }
+        
+        //_sampleDataSubscriptionQueue
 
         private void ReceiveSafeStruct<T>(Socket client) where T : struct, IConvertable<T>
         {

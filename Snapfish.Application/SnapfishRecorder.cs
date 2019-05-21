@@ -10,11 +10,26 @@ namespace Snapfish.Application
     {
         private const int _bufferSize = 1 << 8;
         private static Channel<Echogram> _boundedBuffer;
+        private static Channel<SampleDataContainerClass> _biomassBoundedBuffer;
         EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
+
+        private string _applicationName;
+        private string _applicationType;
+        private string _applicationDescription;
+        private string _applicationVersion;
+        private string _latitude;
+        private string _longitude;
 
         public SnapfishRecorder()
         {
             _boundedBuffer = Channel.CreateBounded<Echogram>(new BoundedChannelOptions(_bufferSize)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+            
+            _biomassBoundedBuffer = Channel.CreateBounded<SampleDataContainerClass>(new BoundedChannelOptions(_bufferSize)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,
@@ -48,6 +63,11 @@ namespace Snapfish.Application
             return echos;
         }
 
+        public async Task<List<T>> CreateSubscribableFileData<T>()
+        {
+            List<T> retval = await Task.Run(() => ConsumeChannel<T>(_biomassBoundedBuffer.Reader)).ContinueWith(task => CreateSubscribableFile(task));
+        }
+
         static List<Echogram> CreateEchogramFile(Task<List<Echogram>> task)
         {
             List<Echogram> EchoYolo = task.Result;
@@ -56,23 +76,30 @@ namespace Snapfish.Application
             // Not sure what to do
             return EchoYolo;
         }
-        
-        public static async Task ConsumeChannelData(ChannelReader<Echogram> c)
+
+        static List<T> CreateSubscribableFile<T>(Task<List<T>> task)
         {
-            try
+            List<T> retval = task.Result;
+
+            return retval;
+        }
+        
+        public static List<T> ConsumeChannel<T>(ChannelReader<T> channelReader)
+        {
+            List<T> retval = new List<T>();
+            int i = 0;
+            while (channelReader.TryRead(out T item))
             {
-                List<Echogram> retval = new List<Echogram>();
-                while (true)
+                retval.Add(item);
+                //TODO: Dont do this, but you know. Its kinda of how we got to do this atm
+                if (++i > _bufferSize)
                 {
-                    Echogram item = await c.ReadAsync();
-                    retval.Add(item);
+                    break;
                 }
             }
-            catch (ChannelClosedException)
-            {
-            }
-        }
-
+            return retval;
+        } 
+        
         public static List<Echogram> ConsumeChannel(ChannelReader<Echogram> channel)
         {
             List<Echogram> retval = new List<Echogram>();
@@ -88,7 +115,8 @@ namespace Snapfish.Application
             }
             return retval;
         }
-
+        
+        
         private static async Task<List<Echogram>> Consume(ChannelReader<Echogram> c)
         {
             List<Echogram> retval = new List<Echogram>();
@@ -107,5 +135,21 @@ namespace Snapfish.Application
             end:
             return retval;
         }
+        public static async Task ConsumeChannelData(ChannelReader<Echogram> c)
+        {
+            try
+            {
+                List<Echogram> retval = new List<Echogram>();
+                while (true)
+                {
+                    Echogram item = await c.ReadAsync();
+                    retval.Add(item);
+                }
+            }
+            catch (ChannelClosedException)
+            {
+            }
+        }
+
     }
 }
