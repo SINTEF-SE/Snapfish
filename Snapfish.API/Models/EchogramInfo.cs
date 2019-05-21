@@ -8,7 +8,7 @@ namespace Snapfish.API.Models
     public class EchogramInfo
     {
         public long ID { get; set; }
-        public long UserID { get; set; }
+        public long OwnerID { get; set; }
         public DateTime Timestamp { get; set; }
         public string Latitude { get; set; }
         public string Longitude { get; set; }
@@ -16,6 +16,9 @@ namespace Snapfish.API.Models
         public string Source { get; set; }
 
         public string EchogramUrl { get; set; }
+
+        public SnapUser Owner { get; set; }
+
 
     }
 }

@@ -11,11 +11,11 @@ namespace Snapfish.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SnapMessageController : ControllerBase
+    public class SnapMessagesController : ControllerBase
     {
         private readonly SnapContext _context;
 
-        public SnapMessageController(SnapContext context)
+        public SnapMessagesController(SnapContext context)
         {
             _context = context;
 /*            if (_context.SnapMessages.Count() == 0)
@@ -32,7 +32,10 @@ namespace Snapfish.API.Controllers
         {
             if (withEchogram)
             {
-                return await _context.SnapMessages.Include(s => s.EchogramInfo).ToListAsync();
+                return await _context.SnapMessages
+                                .Include(s => s.EchogramInfo)
+                                .Include(s => s.Sender)
+                                .ToListAsync();
 
             }
             return await _context.SnapMessages.ToListAsync(); 
@@ -47,7 +50,7 @@ namespace Snapfish.API.Controllers
             if (snap == null)
             {
                 return NotFound();
-            }
+            } 
 
             return snap; 
         }

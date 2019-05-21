@@ -12,6 +12,7 @@ namespace Snapfish.API.Models
             : base(options)
         {
         }
+        public DbSet<SnapUser> SnapUsers { get; set; }
         public DbSet<SnapMessage> SnapMessages { get; set; }
         public DbSet<EchogramInfo> EchogramInfos { get; set; }
     }

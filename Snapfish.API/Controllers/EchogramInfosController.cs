@@ -11,12 +11,12 @@ namespace Snapfish.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EchogramInfoController : ControllerBase
+    public class EchogramInfosController : ControllerBase
     {
 
         private readonly SnapContext _context;
 
-        public EchogramInfoController(SnapContext context)
+        public EchogramInfosController(SnapContext context)
         {
             _context = context;
             if (_context.EchogramInfos.Count() == 0)
@@ -31,7 +31,9 @@ namespace Snapfish.API.Controllers
         [HttpGet]
         public async Task<IEnumerable<EchogramInfo>> GetEchogramInfos()
         {
-            return await _context.EchogramInfos.ToListAsync();
+            return await _context.EchogramInfos
+                            .Include(e => e.Owner)
+                            .ToListAsync ();
         }
 
         // GET: api/EchogramInfo/5

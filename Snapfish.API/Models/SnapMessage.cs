@@ -8,7 +8,7 @@ namespace Snapfish.API.Models
     public class SnapMessage
     {
         public long ID { get; set; }
-        public string Sender { get; set; }
+        public long SenderID { get; set; }
         public string Receivers { get; set; }
         public string Title { get; set; }
         public string Comment { get; set; }
@@ -17,5 +17,6 @@ namespace Snapfish.API.Models
         public long EchogramInfoID { get; set; }
 
         public EchogramInfo EchogramInfo { get; set; }
+        public SnapUser Sender { get; set; }
     }
 }
