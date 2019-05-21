@@ -15,5 +15,13 @@ namespace Snapfish.API.Models
         public DbSet<SnapUser> SnapUsers { get; set; }
         public DbSet<SnapMessage> SnapMessages { get; set; }
         public DbSet<EchogramInfo> EchogramInfos { get; set; }
+        public DbSet<SnapReceiver> SnapReceivers { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SnapReceiver>()
+                .HasKey(r => new { r.SnapMessageID, r.SnapUserID });
+        }
+        
     }
 }

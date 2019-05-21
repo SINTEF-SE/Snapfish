@@ -35,6 +35,7 @@ namespace Snapfish.API.Controllers
                 return await _context.SnapMessages
                                 .Include(s => s.EchogramInfo)
                                 .Include(s => s.Sender)
+                                .Include(s => s.Receivers)
                                 .ToListAsync();
 
             }
