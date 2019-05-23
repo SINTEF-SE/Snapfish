@@ -11,7 +11,9 @@ namespace Snapfish.API.Models
         public long SnapMessageID { get; set; }
         public long SnapUserID { get; set; }
 
-        [NotMapped]
+        // TODO: Add status: unread, read, deleted
+
+        // [NotMapped]
         public string ReceiverEmail { get; set; }
     }
 }

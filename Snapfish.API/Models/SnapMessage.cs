@@ -9,6 +9,7 @@ namespace Snapfish.API.Models
     {
         public long ID { get; set; }
         public long SenderID { get; set; }
+        public string SenderEmail { get; set; }
         public string Title { get; set; }
         public string Comment { get; set; }
         public DateTime SendTimestamp { get; set; }

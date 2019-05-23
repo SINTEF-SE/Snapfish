@@ -47,8 +47,8 @@ namespace Snapfish.API.Data
 
             var snaps = new SnapMessage[]
             {
-                new SnapMessage{EchogramInfoID = echograms[0].ID, Title="Mye fisk her", Comment="Vi har ikke plass til mer", SenderID=users[0].ID, SendTimestamp=DateTime.Parse("2019-05-12 08:04+0100"), SharePublicly=false},
-                new SnapMessage{EchogramInfoID = echograms[1].ID, Title="Torsk", Comment="Her blir det fangst!", SenderID=users[1].ID, SendTimestamp=DateTime.Parse("2019-05-12 09:32+0100"), SharePublicly=true}
+                new SnapMessage{EchogramInfoID = echograms[0].ID, Title="Mye fisk her", Comment="Vi har ikke plass til mer", SenderID=users[0].ID, SenderEmail=users[0].Email, SendTimestamp=DateTime.Parse("2019-05-12 08:04+0100"), SharePublicly=false},
+                new SnapMessage{EchogramInfoID = echograms[1].ID, Title="Torsk", Comment="Her blir det fangst!", SenderID=users[2].ID, SenderEmail=users[2].Email, SendTimestamp=DateTime.Parse("2019-05-12 09:32+0100"), SharePublicly=true}
             };
             foreach (SnapMessage s in snaps)
             {
@@ -58,9 +58,9 @@ namespace Snapfish.API.Data
 
             var snapReceivers = new SnapReceiver[]
             {
-                new SnapReceiver{SnapMessageID=snaps[0].ID, SnapUserID=users[1].ID},
-                new SnapReceiver{SnapMessageID=snaps[1].ID, SnapUserID=users[1].ID},
-                new SnapReceiver{SnapMessageID=snaps[1].ID, SnapUserID=users[2].ID},
+                new SnapReceiver{SnapMessageID=snaps[0].ID, SnapUserID=users[1].ID, ReceiverEmail=users[1].Email},
+                new SnapReceiver{SnapMessageID=snaps[1].ID, SnapUserID=users[0].ID, ReceiverEmail=users[0].Email},
+                new SnapReceiver{SnapMessageID=snaps[1].ID, SnapUserID=users[1].ID, ReceiverEmail=users[1].Email},
             };
             foreach (SnapReceiver sr in snapReceivers)
             {

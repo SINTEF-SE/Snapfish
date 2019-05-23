@@ -18,18 +18,33 @@ namespace Snapfish.API.Controllers
         public SnapMessagesController(SnapContext context)
         {
             _context = context;
-/*            if (_context.SnapMessages.Count() == 0)
-            {
-                _context.SnapMessages.Add(new SnapMessage { Title = "First snap!", Sender = "Ola", SendTimestamp = DateTime.Now });
-                _context.SaveChanges();
-            }*/
+            /*            if (_context.SnapMessages.Count() == 0)
+                        {
+                            _context.SnapMessages.Add(new SnapMessage { Title = "First snap!", Sender = "Ola", SendTimestamp = DateTime.Now });
+                            _context.SaveChanges();
+                        }*/
 
         }
-        
+
         // GET: api/SnapMessage
         [HttpGet]
-        public async Task<IEnumerable<SnapMessage>> GetSnapMessages([FromQuery] bool withEchogram=false)
+        public async Task<IEnumerable<SnapMessage>> GetSnapMessages([FromQuery] bool withEchogram = false, [FromQuery] bool withSender = true, [FromQuery] bool withReceivers = true)
         {
+            if (withReceivers == false)
+            {
+                return await _context.SnapMessages
+                                .Include(s => s.EchogramInfo)
+                                .Include(s => s.Sender)
+                                .ToListAsync();
+            }
+
+            if (withSender == false)
+            {
+                return await _context.SnapMessages
+                                .Include(s => s.EchogramInfo)
+                                .Include(s => s.Receivers)
+                                .ToListAsync();
+            }
             if (withEchogram)
             {
                 return await _context.SnapMessages
@@ -63,7 +78,26 @@ namespace Snapfish.API.Controllers
             item.ID = 0;
             item.EchogramInfo = null;
             item.SendTimestamp = DateTime.Now;
+
+            // Look up sender
+            SnapUser sendingUser = _context.SnapUsers.Where(s => s.Email == item.SenderEmail).First();
+            if (sendingUser != null)
+            {
+                item.SenderID = sendingUser.ID;
+            }
+
+            // Look up receivers
+            foreach (SnapReceiver receiver in item.Receivers)
+            {
+                SnapUser user = _context.SnapUsers.Where(s => s.Email == receiver.ReceiverEmail).First();
+                if (user != null)
+                {
+                    receiver.SnapUserID = user.ID;
+                }
+            }
+
             _context.SnapMessages.Add(item);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetSnapMessage), new { id = item.ID }, item);
