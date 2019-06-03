@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.EkSeriesPubsubLibrary.ConsolePlayground", "Snapfish.EkSeriesPubsubLibrary.ConsolePlayground\Snapfish.EkSeriesPubsubLibrary.ConsolePlayground.csproj", "{D8E1BEAC-3DA9-4E92-BB5A-7FDD9567416C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.API", "Snapfish.API\Snapfish.API.csproj", "{B48D7CB8-9D97-4843-A073-C71EBAF357EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.API_OLD", "Snapfish.API_OLD\Snapfish.API_OLD.csproj", "{B48D7CB8-9D97-4843-A073-C71EBAF357EA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.Application", "Snapfish.Application\Snapfish.Application.csproj", "{5A42C2ED-7252-4C49-AD64-A2B19E015AD2}"
 EndProject
@@ -17,6 +17,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.WebApp", "Snapfish.WebApp\Snapfish.WebApp.csproj", "{1FBA2D0A-172D-49BA-9122-B46A3C31FBCB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.Console", "Snapfish.Console\Snapfish.Console.csproj", "{DB7D346C-61AB-4641-934E-D23107960BF9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapfish.API", "Snapfish.API\Snapfish.API.csproj", "{5DA14184-777D-4DC4-BC0A-4B55EEDD4C0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,5 +62,9 @@ Global
 		{DB7D346C-61AB-4641-934E-D23107960BF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB7D346C-61AB-4641-934E-D23107960BF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB7D346C-61AB-4641-934E-D23107960BF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DA14184-777D-4DC4-BC0A-4B55EEDD4C0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA14184-777D-4DC4-BC0A-4B55EEDD4C0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DA14184-777D-4DC4-BC0A-4B55EEDD4C0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DA14184-777D-4DC4-BC0A-4B55EEDD4C0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -50,7 +51,7 @@ namespace Snapfish.Application
             daemon.CreateEchogramSubscription(ref _boundedBuffer);
         }
 
-        public async Task<List<Echogram>> /*List<Echogram>*/ CreateEchogramFileData()
+        public async Task<List<Echogram>> CreateEchogramFileData()
         {
             /*
              * Something different
@@ -63,9 +64,36 @@ namespace Snapfish.Application
             return echos;
         }
 
-        public async Task<List<T>> CreateSubscribableFileData<T>()
+        public async Task<List<T>> CreateSubscribableFileData<T>(EkSeriesDataSubscriptionType type)
         {
-            List<T> retval = await Task.Run(() => ConsumeChannel<T>(_biomassBoundedBuffer.Reader)).ContinueWith(task => CreateSubscribableFile(task));
+            List<T> retval = new List<T>();
+            switch (type)
+            {
+                case EkSeriesDataSubscriptionType.BottomDetection:
+                    break;
+                case EkSeriesDataSubscriptionType.TargetStrengthTsDetection:
+                    break;
+                case EkSeriesDataSubscriptionType.TargetStrengthTsDetectionChirp:
+                    break;
+                case EkSeriesDataSubscriptionType.SampleData:
+                    retval = await Task.Run(() => ConsumeChannel(_biomassBoundedBuffer.Reader as ChannelReader<T>)).ContinueWith(task => CreateSubscribableFile(task));
+                    break;
+                case EkSeriesDataSubscriptionType.Echogram:
+                    break;
+                case EkSeriesDataSubscriptionType.TargetsEchogram:
+                    break;
+                case EkSeriesDataSubscriptionType.Integration:
+                    break;
+                case EkSeriesDataSubscriptionType.IntegrationChirp:
+                    break;
+                case EkSeriesDataSubscriptionType.TargetsIntegration:
+                    break;
+                case EkSeriesDataSubscriptionType.NoiseSpectrum:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+            return retval;
         }
 
         static List<Echogram> CreateEchogramFile(Task<List<Echogram>> task)
@@ -84,6 +112,7 @@ namespace Snapfish.Application
             return retval;
         }
         
+        /* For some reason this doesnt work */
         public static List<T> ConsumeChannel<T>(ChannelReader<T> channelReader)
         {
             List<T> retval = new List<T>();
