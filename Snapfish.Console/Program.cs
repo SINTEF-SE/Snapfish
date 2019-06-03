@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Snapfish.Application;
 using Snapfish.BL.Models;
@@ -28,9 +29,23 @@ namespace Snapfish.Console
                     }
                 }  else if (key.StartsWith("b"))
                 {
-                    List<SampleDataContainerClass> sampleData = recorder.CreateSampleDataSubscription
-                }  
+                    List<SampleDataContainerClass> sampleData = recorder.CreateSubscribableFileData<SampleDataContainerClass>(EkSeriesDataSubscriptionType.SampleData).Result;
+                } else if (key.StartsWith("d"))
+                {
+                    List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+                    List<SampleDataContainerClass> sampleData = recorder.CreateSubscribableFileData<SampleDataContainerClass>(EkSeriesDataSubscriptionType.SampleData).Result;
+                    CreateTransmissableDataPacket(echos, sampleData);
+                } 
             }
+        }
+
+        public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(List<Echogram> echos, List<SampleDataContainerClass> biomasses)
+        {
+            List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
+
+            System.Console.WriteLine("Yo");
+
+            return snapData;
         }
     }
 }
