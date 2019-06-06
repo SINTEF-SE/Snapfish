@@ -59,6 +59,48 @@ namespace Snapfish.API.Controllers
 
             return CreatedAtAction(nameof(GetEchogramInfo), new { id = item.ID }, item);
         }
+        
+        //TODO: REMOVE ME ONLY FOR DEMO, LETS DO THIS SAFELY TO ENSURE NO FUCK UPS
+        [HttpPost]
+        public async Task<ActionResult<int>> PostEchogramInfo(int id)
+        {
+            EchogramInfo infoClass = new EchogramInfo();
+            switch (id)
+            {
+                case 1:
+                    infoClass.ID = 15;
+                    infoClass.Latitude = "632468";
+                    infoClass.Longitude = "116306";
+                    infoClass.Source = "Kanonbåtens EK80";
+                    infoClass.EchogramUrl = "IP.TIL.ERLENDS.MASKIN/test/index.html";
+                    infoClass.Timestamp = DateTime.Now;
+                    infoClass.Biomass = "341";
+                    break;
+                case 2:
+                    infoClass.ID = 16;
+                    infoClass.Latitude = "632468";
+                    infoClass.Longitude = "116306";
+                    infoClass.Source = "Kanonbåtens EK80";
+                    infoClass.EchogramUrl = "IP.TIL.ERLENDS.MASKIN/test/index.html";
+                    infoClass.Timestamp = DateTime.Now;
+                    infoClass.Biomass = "341";
+                    break;
+                case 3:
+                    infoClass.ID = 17;
+                    infoClass.Latitude = "632468";
+                    infoClass.Longitude = "116306";
+                    infoClass.Source = "Kanonbåtens EK80";
+                    infoClass.EchogramUrl = "IP.TIL.ERLENDS.MASKIN/test/index.html";
+                    infoClass.Timestamp = DateTime.Now;
+                    infoClass.Biomass = "341";
+                    break;
+            }
+
+            _context.EchogramInfos.Add(infoClass);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetEchogramInfo), new { id = infoClass.ID }, infoClass);
+        }
+        
 
         /*
         // PUT: api/EchogramInfo/5

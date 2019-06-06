@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Snapfish.Application;
@@ -48,6 +49,20 @@ namespace Snapfish.Console
             System.Console.WriteLine("Yo");
 
             return snapData;
+        }
+        
+        public async void UploadSnap(List<EchogramTransmissionPacket> packets)
+        {
+            using (var client = new HttpClient())
+            {
+                var content = new FormUrlEncodedContent(new[]
+                                   {
+                                       new KeyValuePair<string, string>("", "upload")
+                                   });
+                var result = await client.PostAsync("/api/snap/upload", content);
+                string resultContent = await result.Content.ReadAsStringAsync();
+                System.Console.WriteLine(resultContent);
+            }
         }
     }
 }
