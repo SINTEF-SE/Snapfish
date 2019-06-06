@@ -49,6 +49,7 @@ namespace Snapfish.Application
         public void AttachBufferToEchogramSubscription()
         {
             daemon.CreateEchogramSubscription(ref _boundedBuffer);
+            daemon.CreateSampleDataSubscription(ref _biomassBoundedBuffer);
         }
 
         public async Task<List<Echogram>> CreateEchogramFileData()

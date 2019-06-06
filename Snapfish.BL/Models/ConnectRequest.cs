@@ -26,5 +26,25 @@ namespace Snapfish.BL.Models
         {
             return new string(ClientInfo);
         }
+
+        public string GetRequestType()
+        {
+            return GetName();
+        }
+
+        public void SetRequestType(string requestType)
+        {
+            
+        }
+
+        public string GetMethodInvocationType()
+        {
+            return "None"; //TODO REMOVE HARDCODED
+        }
+
+        public void SetMethodInvocationType(string methodInvocationType)
+        {
+
+        }
     }
 }

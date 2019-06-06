@@ -13,7 +13,7 @@ namespace Snapfish.Console
         {
             SnapfishRecorder recorder = new SnapfishRecorder();
             recorder.InstallDaemon();
-            Thread.Sleep(1000);
+            Thread.Sleep(5000);
             recorder.AttachBufferToEchogramSubscription();
             while (true)
             {
@@ -43,6 +43,8 @@ namespace Snapfish.Console
         {
             List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
 
+            
+            
             System.Console.WriteLine("Yo");
 
             return snapData;

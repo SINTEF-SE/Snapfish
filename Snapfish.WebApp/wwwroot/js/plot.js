@@ -3,11 +3,11 @@
 
 class Plot {
     constructor(containerId, title, dataContainer, colorScale) {
-        this.container = document.getElementById(containerId);
-        this.canvasId = containerId + '-canvas';
+        this.container = document.getElementById(containerId.domId);
+        this.canvasId = containerId.domId + '-canvas';
         this.title = title;
-        this.dataContainer = dataContainer;
-        this.colorScale = colorScale;
+        this.dataContainer = containerId.data;
+        this.colorScale = containerId.colors;
         this.playing = false;
         this.zoomLevel = 1;
         this.viewportOffset = 0;
@@ -345,7 +345,7 @@ class Plot {
             <div class='plot-time'></div>
             <div class='chart-row'>
                 <div class='y-axis'></div>
-                <div class='canvas-col'>
+                <div class='canvas-col'>z
                     <div class='canvas-div'></div>
                     <div class='x-axis'></div>
                 </div>

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <title>SV Plot :: WebGL</title>
-    <link rel="stylesheet" type="text/css" href="../css/plot.css" />
+    <link rel="stylesheet" type="text/css" href="../css/nouislider.min.css" />
+    <link rel="stylesheet" type="text/css" href="../js/plot.css" />
     <style>
         body {
             background-color: #edede5;
@@ -22,19 +23,20 @@
 </head>
 <body>
     <div id="plots-container">
-        <div id="sv-plot" class="plot"></div>
         <div id="backscatter-plot" class="plot"></div>
-        <div id="time-controller" class='time-control'></div>
     </div>
     
-    <script src="../js/chroma.min.js"></script>
-    <script src="../js/papaparse.min.js"></script>
+    <script src="../js/libs/chroma.min.js"></script>
+    <script src="../js/libs/crossfilter.min.js"></script>
+    <script src="../js/libs/papaparse.min.js"></script>
+    <script src="../js/libs/nouislider.min.js"></script>
 
     <script src="../js/shaders.js"></script>
     <script src="../js/webgl-utils.js"></script>
     <script src="../js/data.js"></script>
     <script src="../js/plot.js"></script>
     <script src="../js/time-control.js"></script>
-    <script src="../js/main.js"></script>
+
+    <script src="main.js"></script>
 </body>
 </html>

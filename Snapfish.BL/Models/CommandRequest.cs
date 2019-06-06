@@ -7,6 +7,8 @@ namespace Snapfish.BL.Models
         public char[] Header; // REQ\0
         public char[] MsgControl; //22
         public char[] MsgRequest; //1400
+        private string _requestType;
+        private string _requestMethodInvocationType;
         
         
         public byte[] ToArray()
@@ -39,6 +41,26 @@ namespace Snapfish.BL.Models
         public string GetSequenceNumber()
         {
             return new string(MsgControl);
+        }
+
+        public string GetRequestType()
+        {
+            return _requestType;
+        }
+
+        public void SetRequestType(string requestType)
+        {
+            _requestType = requestType;
+        }
+
+        public string GetMethodInvocationType()
+        {
+            return _requestMethodInvocationType;
+        }
+
+        public void SetMethodInvocationType(string methodInvocationType)
+        {
+            _requestMethodInvocationType = methodInvocationType;
         }
     }
 }
