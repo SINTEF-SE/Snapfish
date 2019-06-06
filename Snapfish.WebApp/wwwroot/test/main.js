@@ -1,6 +1,7 @@
 const colors = chroma.scale('Spectral');
 
 const dataContainer = new DataContainer('data/data.csv');
+
 const svPlot = new Plot({
     domId: 'backscatter-plot',
     title: 'Sv Plot',

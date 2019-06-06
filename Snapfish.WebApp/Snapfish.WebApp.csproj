@@ -17,4 +17,9 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\test\data\backscatter.csv" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\data\data.csv" />
+    </ItemGroup>
+
 </Project>
