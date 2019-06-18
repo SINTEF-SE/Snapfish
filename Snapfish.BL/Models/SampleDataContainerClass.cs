@@ -25,7 +25,7 @@ namespace Snapfish.BL.Models
         {
             BinaryReader reader = new BinaryReader(new MemoryStream(bytes));
             SampleDataContainerClass s = default(SampleDataContainerClass);
-            StructSampleDataHeader header = new StructSampleDataHeader {dlTime = reader.ReadUInt32()};
+            StructSampleDataHeader header = new StructSampleDataHeader {dlTime = reader.ReadUInt64()};
             s.SampleDataHeader = header;
             StructSampleDataArray array = new StructSampleDataArray();
             byte[] remainingDataFromReader = reader.ReadAllBytes();

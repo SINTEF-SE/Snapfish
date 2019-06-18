@@ -39,6 +39,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private ServerInfo _remoteEkSeriesInfo;
         private static ConnectRequestReponseStruct _connectRequestReponseStruct;
         private static ConnectionToEkSeriesDevice _currentActiveConnection; //TODO: LIST?
+
         private static Dictionary<long, EkSeriesDataSubscriptionType> _subscriptionIdToTypeMap = new Dictionary<long, EkSeriesDataSubscriptionType>();
         //private static List<EkSeriesSubscriptionResponse> SubscriptionRequestResponseMapper = new List<EkSeriesSubscriptionResponse>();
 
@@ -115,6 +116,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
          */
         private static Channel<Echogram> _echogramSubscriptionQueue = null;
         private static Channel<SampleDataContainerClass> _sampleDataSubscriptionQueue = null;
+        private static Channel<TargetsIntegration> _targetsIntegration = null;
 
         public EkSeriesSocketDaemon()
         {
@@ -362,6 +364,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
                              "," + "RangeStart=" + _echogramConfiguration.RangeStart + ",";
                     break;
                 case EkSeriesDataSubscriptionType.TargetsEchogram:
+                    retval = "TargetsIntegration,ChannelID=" + _channelID +
+                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
                     break;
                 case EkSeriesDataSubscriptionType.Integration:
                     break;
@@ -404,12 +408,11 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
             else if (subscriptionType == EkSeriesDataSubscriptionType.SampleData)
             {
+                Console.WriteLine("SENDING SampleData REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
+            } else if (subscriptionType == EkSeriesDataSubscriptionType.TargetsIntegration)
+            {
                 Console.WriteLine("SENDING BIOMASS REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
             }
-
-    //        SubscriptionRequestResponseMapper.Add(new EkSeriesSubscriptionResponse()
-    //            {RequestId = _currentActiveConnection.SequenceNumber, SubscriptionId = SubscriptionRequestResponseMapper.Count + 1, SubscriptionType = subscriptionType});
-
 
             request.MsgControl = (_currentActiveConnection.SequenceNumber + ",1,1\0\0\0\0").ToCharArray();
             request.MsgRequest = ("<request>" +
@@ -557,6 +560,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE SampleData TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE SampleData TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.Echogram:
                                     Echogram echogram = Echogram.FromArray(processedData.DataAsBytes);
@@ -565,8 +569,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.TargetsEchogram:
+                                    TargetsIntegration integration = TargetsIntegration.FromArray(processedData.DataAsBytes);
+                                    if (!_targetsIntegration.Writer.TryWrite(integration))
+                                    {
+                                        Console.WriteLine("\"COULD NOT WRITE TS TO CHANNEL! W00t\"");
+                                        _logger.Alert("COULD NOT WRITE TS TO CHANNEL! W00t");
+                                    }
                                     break;
                                 case EkSeriesDataSubscriptionType.Integration:
                                     break;
@@ -579,6 +590,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
+
                             break;
                         case "RTR": //UNDOCUMENTED :: RETRANSMISSION PACKET
                             Console.Write("Received RTR IN SUB");
@@ -735,6 +747,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                             }
                                         }
                                     }
+
                                     break;
                                 case "SubscribeResponse":
                                     //PARSE SUBSCRIPTION ID
@@ -744,9 +757,10 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                     {
                                         break;
                                     }
+
                                     foreach (var packet in SentPackets.ToList()) //Need a copy of the list to avoid enumerating while the collection is being modified.
-                                    {                                           
-                                        if(packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
+                                    {
+                                        if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
                                         {
                                             if (packet.SendableStruct.GetRequestType() == "Subscription")
                                             {
@@ -786,10 +800,12 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                                     default:
                                                         throw new ArgumentOutOfRangeException();
                                                 }
+
                                                 _subscriptionIdToTypeMap.Add(Int64.Parse(subscriptionNode.Value), type);
                                             }
                                         }
                                     }
+
                                     break;
                             }
 
@@ -971,6 +987,12 @@ namespace Snapfish.EkSeriesPubsubLibrary
         {
             _sampleDataSubscriptionQueue = sampleDataSubscriptionQueue;
             SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
+        }
+
+        public void CreateBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
+        {
+            _targetsIntegration = targetsIntegrationQueue;
+            SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.TargetsIntegration);
         }
 
         //_sampleDataSubscriptionQueue

@@ -9,10 +9,11 @@ namespace Snapfish.Application
 {
     public class SnapfishRecorder
     {
-        private const int _bufferSize = 1 << 8;
+        private const int BufferSize = 1 << 8;
         private static Channel<Echogram> _boundedBuffer;
-        private static Channel<SampleDataContainerClass> _biomassBoundedBuffer;
-        EkSeriesSocketDaemon daemon = new EkSeriesSocketDaemon();
+        private static Channel<SampleDataContainerClass> _sampleDataBoundedBuffer;
+        private static Channel<TargetsIntegration> _biomassBoundedBuffer;
+        private readonly EkSeriesSocketDaemon _daemon = new EkSeriesSocketDaemon();
 
         private string _applicationName;
         private string _applicationType;
@@ -23,14 +24,21 @@ namespace Snapfish.Application
 
         public SnapfishRecorder()
         {
-            _boundedBuffer = Channel.CreateBounded<Echogram>(new BoundedChannelOptions(_bufferSize)
+            _boundedBuffer = Channel.CreateBounded<Echogram>(new BoundedChannelOptions(BufferSize)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,
                 SingleReader = false
             });
             
-            _biomassBoundedBuffer = Channel.CreateBounded<SampleDataContainerClass>(new BoundedChannelOptions(_bufferSize)
+            _sampleDataBoundedBuffer = Channel.CreateBounded<SampleDataContainerClass>(new BoundedChannelOptions(BufferSize)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+
+            _biomassBoundedBuffer = Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions(BufferSize)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,
@@ -40,16 +48,17 @@ namespace Snapfish.Application
 
         public void InstallDaemon()
         {
-            daemon.HandshakeWithEkSeriesDevice();
-            daemon.ConnectToRemoteEkDevice();
-            daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
-            daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
+            _daemon.HandshakeWithEkSeriesDevice();
+            _daemon.ConnectToRemoteEkDevice();
+            _daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
+            _daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
         }
 
         public void AttachBufferToEchogramSubscription()
         {
-            daemon.CreateEchogramSubscription(ref _boundedBuffer);
-            daemon.CreateSampleDataSubscription(ref _biomassBoundedBuffer);
+            _daemon.CreateEchogramSubscription(ref _boundedBuffer);
+            //_daemon.CreateSampleDataSubscription(ref _sampleDataBoundedBuffer);
+            _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
         public async Task<List<Echogram>> CreateEchogramFileData()
@@ -77,7 +86,7 @@ namespace Snapfish.Application
                 case EkSeriesDataSubscriptionType.TargetStrengthTsDetectionChirp:
                     break;
                 case EkSeriesDataSubscriptionType.SampleData:
-                    retval = await Task.Run(() => ConsumeChannel(_biomassBoundedBuffer.Reader as ChannelReader<T>)).ContinueWith(task => CreateSubscribableFile(task));
+                    retval = await Task.Run(() => ConsumeChannel(_sampleDataBoundedBuffer.Reader as ChannelReader<T>)).ContinueWith(task => CreateSubscribableFile(task));
                     break;
                 case EkSeriesDataSubscriptionType.Echogram:
                     break;
@@ -88,6 +97,7 @@ namespace Snapfish.Application
                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                     break;
                 case EkSeriesDataSubscriptionType.TargetsIntegration:
+                    retval = await Task.Run(() => ConsumeChannel(_biomassBoundedBuffer.Reader as ChannelReader<T>)).ContinueWith(task => CreateSubscribableFile(task));
                     break;
                 case EkSeriesDataSubscriptionType.NoiseSpectrum:
                     break;
@@ -122,7 +132,7 @@ namespace Snapfish.Application
             {
                 retval.Add(item);
                 //TODO: Dont do this, but you know. Its kinda of how we got to do this atm
-                if (++i > _bufferSize)
+                if (++i > BufferSize)
                 {
                     break;
                 }
@@ -138,7 +148,7 @@ namespace Snapfish.Application
             {
                 retval.Add(item);
                 //TODO: Dont do this, but you know. Its kinda of how we got to do this atm
-                if (++i > _bufferSize)
+                if (++i > BufferSize)
                 {
                     break;
                 }

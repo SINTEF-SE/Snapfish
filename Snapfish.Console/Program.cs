@@ -14,7 +14,7 @@ namespace Snapfish.Console
         {
             SnapfishRecorder recorder = new SnapfishRecorder();
             recorder.InstallDaemon();
-            Thread.Sleep(5000);
+            Thread.Sleep(7000);
             recorder.AttachBufferToEchogramSubscription();
             while (true)
             {
@@ -25,7 +25,6 @@ namespace Snapfish.Console
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     if (echos != null)
                     {
-                        //COol
                         System.Console.WriteLine("uuh");
                     }
                 }  else if (key.StartsWith("b"))
@@ -36,14 +35,28 @@ namespace Snapfish.Console
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     List<SampleDataContainerClass> sampleData = recorder.CreateSubscribableFileData<SampleDataContainerClass>(EkSeriesDataSubscriptionType.SampleData).Result;
                     CreateTransmissableDataPacket(echos, sampleData);
-                } 
+                } else if (key.StartsWith("f"))
+                {
+                    List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+                    List<TargetsIntegration> biomass = recorder.CreateSubscribableFileData<TargetsIntegration>(EkSeriesDataSubscriptionType.TargetsIntegration).Result;
+                    CreateTransmissableDataPacket(echos, biomass);
+                }
             }
+        }
+
+        public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(List<Echogram> echos, List<TargetsIntegration> biomasses)
+        {
+            List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
+            
+            System.Console.WriteLine("yoyo");
+
+            return snapData;
         }
 
         public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(List<Echogram> echos, List<SampleDataContainerClass> biomasses)
         {
             List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
-
+            
             
             
             System.Console.WriteLine("Yo");

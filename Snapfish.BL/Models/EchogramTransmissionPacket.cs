@@ -13,5 +13,6 @@ namespace Snapfish.BL.Models
 
         public List<Echogram> Echograms { get; set; }
         public List<SampleDataContainerClass> SampleData { get; set; }
+        public List<TargetsIntegration> Biomass { get; set; }
     }
 }

@@ -25,7 +25,7 @@ namespace Snapfish.BL.Models
         {
             BinaryReader reader = new BinaryReader(new MemoryStream(bytes));
             Echogram s = default(Echogram);
-            EchogramHeader header = new EchogramHeader {dlTime = reader.ReadUInt32(), range = reader.ReadDouble(), rangeStart = reader.ReadDouble()};
+            EchogramHeader header = new EchogramHeader {dlTime = reader.ReadUInt64(), range = reader.ReadDouble(), rangeStart = reader.ReadDouble()};
 
             s.EchogramHeader = header;
             
