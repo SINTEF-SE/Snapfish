@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
     /*
      * This is a composite subscription where target strength (TS) detection and integration parameters must be set. The Sa value is taken only from the accepted single echo trace inside the range.

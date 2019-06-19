@@ -1,6 +1,6 @@
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
-    public enum ParameterRequestType
+    public enum EkSeriesParameterRequest
     {
         GET_PARAMETER,
         SET_PARAMETER,

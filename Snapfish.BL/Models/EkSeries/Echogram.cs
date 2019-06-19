@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Snapfish.BL.Extensions;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
     public struct EchogramHeader
     {

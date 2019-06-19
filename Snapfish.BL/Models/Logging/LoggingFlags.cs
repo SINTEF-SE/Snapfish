@@ -1,6 +1,6 @@
 using System;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.Logging
 {
     [Flags]
     public enum LoggingFlags

@@ -1,4 +1,5 @@
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.EkSeriesPubsubLibrary.Domain
 {

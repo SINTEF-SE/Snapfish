@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
     public struct CommandRequest : ISendableStruct
     {

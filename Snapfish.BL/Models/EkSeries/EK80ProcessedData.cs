@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
     public struct Ek80ProcessedData : IConvertable<Ek80ProcessedData>
     {

@@ -1,8 +1,8 @@
 using System;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
-    public enum ParameterType
+    public enum EkSeriesParameterType
     {
         GetApplicationName,
         GetApplicationType,
@@ -37,67 +37,67 @@ namespace Snapfish.BL.Models
 
     public static class ParameterTypeExtensions
     {
-        public static string GetParameterName(this ParameterType me, string channelId = "")
+        public static string GetParameterName(this EkSeriesParameterType me, string channelId = "")
         {
             switch (me)
             {
-                case ParameterType.GetApplicationName:
+                case EkSeriesParameterType.GetApplicationName:
                     return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationName";
-                case ParameterType.GetApplicationType:
+                case EkSeriesParameterType.GetApplicationType:
                     return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationType";
-                case ParameterType.GetApplicationDescription:
+                case EkSeriesParameterType.GetApplicationDescription:
                     return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationDescription";
-                case ParameterType.GetApplicationVersion:
+                case EkSeriesParameterType.GetApplicationVersion:
                     return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationVersion";
-                case ParameterType.GetChannelId:
+                case EkSeriesParameterType.GetChannelId:
                     return "TransceiverMgr/Channels";
-                case ParameterType.GetFrequency:
+                case EkSeriesParameterType.GetFrequency:
                     return "TransceiverMgr/" + channelId + "/Frequency";
-                case ParameterType.GetPulseLength:
+                case EkSeriesParameterType.GetPulseLength:
                     return "TransceiverMgr/" + channelId + "/PulseLength";
-                case ParameterType.GetSampleInterval:
+                case EkSeriesParameterType.GetSampleInterval:
                     return "TransceiverMgr/" + channelId + "/SampleInterval";
-                case ParameterType.GetTransmitPower:
+                case EkSeriesParameterType.GetTransmitPower:
                     return "TransceiverMgr/" + channelId + "/TransmitPower";
-                case ParameterType.AbsorptionCoefficient:
+                case EkSeriesParameterType.AbsorptionCoefficient:
                     return "TransceiverMgr/" + channelId + "/AbsorptionCofficient";
-                case ParameterType.SoundVelocity:
+                case EkSeriesParameterType.SoundVelocity:
                     return "TransceiverMgr/" + channelId + "/SoundVelocity";
-                case ParameterType.TransducerName:
+                case EkSeriesParameterType.TransducerName:
                     return "TransceiverMgr/" + channelId + "/TransducerName";
-                case ParameterType.EquivalentBeamAngle:
+                case EkSeriesParameterType.EquivalentBeamAngle:
                     return "TransceiverMgr/" + channelId + "/EquivalentBeamAngle";
-                case ParameterType.AngleSensitivityAlongship:
+                case EkSeriesParameterType.AngleSensitivityAlongship:
                     return "TransceiverMgr/" + channelId + "/AngleSensitivityAlongship"; //AngleSensitivityAthwartship
-                case ParameterType.AngleSensitivityAthwartship:
+                case EkSeriesParameterType.AngleSensitivityAthwartship:
                     return "TransceiverMgr/" + channelId + "/AngleSensitivityAthwartship";
-                case ParameterType.BeamWidthAlongship:
+                case EkSeriesParameterType.BeamWidthAlongship:
                     return "TransceiverMgr/" + channelId + "/BeamWidthAlongship";
-                case ParameterType.AngleOffsetAlongship:
+                case EkSeriesParameterType.AngleOffsetAlongship:
                     return "TransceiverMgr/" + channelId + "/AngleOffsetAlongship";
-                case ParameterType.Gain:
+                case EkSeriesParameterType.Gain:
                     return "TransceiverMgr/" + channelId + "/Gain";
-                case ParameterType.SaCorrection:
+                case EkSeriesParameterType.SaCorrection:
                     return "TransceiverMgr/" + channelId + "/SaCorrection";
-                case ParameterType.PingTime:
+                case EkSeriesParameterType.PingTime:
                     return "TransceiverMgr/PingTime";
-                case ParameterType.Latitude:
+                case EkSeriesParameterType.Latitude:
                     return "TransceiverMgr/Latitude";
-                case ParameterType.Longitude:
+                case EkSeriesParameterType.Longitude:
                     return "TransceiverMgr/Longitude";
-                case ParameterType.Heave:
+                case EkSeriesParameterType.Heave:
                     return "TransceiverMgr/Heave";
-                case ParameterType.Roll:
+                case EkSeriesParameterType.Roll:
                     return "TransceiverMgr/Roll";
-                case ParameterType.Pitch:
+                case EkSeriesParameterType.Pitch:
                     return "TransceiverMgr/Pitch";
-                case ParameterType.Distance:
+                case EkSeriesParameterType.Distance:
                     return "TransceiverMgr/Distance";
-                case ParameterType.ClientTimeoutLimit:
+                case EkSeriesParameterType.ClientTimeoutLimit:
                     return "TransceiverMgr/Distance";
-                case ParameterType.NoiseEstimate:
+                case EkSeriesParameterType.NoiseEstimate:
                     return "ProcessingMgr/" + channelId + "/ChannelProcessingCommon/NoiseEstimate";
-                case ParameterType.ApplicationType:
+                case EkSeriesParameterType.ApplicationType:
                     return "RemoteCommandDispatcher/BrowseInfoProvider/ApplicationType";
                 default:
                     throw new NotImplementedException("Invalid ParameterName");

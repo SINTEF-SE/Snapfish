@@ -1,6 +1,6 @@
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
-    public enum Ek80RequestType
+    public enum EkSeriesRequestType
     {
         CreateDataSubscription, ChangeDataSubscription, DestroyDataSubscription
     }

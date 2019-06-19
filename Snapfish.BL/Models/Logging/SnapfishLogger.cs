@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.Logging
 {
     //IF U WANT TO LOG TO FOR INSTANCE STDOUT: _logger.AddWriter(new StreamWriter(Console.OpenStandardOutput()), LoggingFlags.All);
-    //STDERR: readonly ESushiLogger _logger = new ESushiLogger(new StreamWriter(Console.OpenStandardError()));
+    //STDERR: readonly SnapfishLogger _logger = new SnapfishLogger(new StreamWriter(Console.OpenStandardError()));
     public class SnapfishLogger
     {
         private const string DateTimeFormat = "%yyyy-%MM-%dd %HH:%mm:%ss %zz";
@@ -28,7 +28,7 @@ namespace Snapfish.BL.Models
             }
             else
             {
-                Error("Tried to add already added writer: " + writer.ToString(), "LOGGER");
+                Error("Tried to add already added writer: " + (StreamWriter) null, "LOGGER");
             }
         }
 

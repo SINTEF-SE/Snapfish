@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.BL.Models
 {

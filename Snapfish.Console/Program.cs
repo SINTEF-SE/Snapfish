@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Snapfish.Application;
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.Console
 {

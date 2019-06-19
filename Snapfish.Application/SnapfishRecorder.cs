@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 using Snapfish.EkSeriesPubsubLibrary;
 
 namespace Snapfish.Application
@@ -50,8 +51,8 @@ namespace Snapfish.Application
         {
             _daemon.HandshakeWithEkSeriesDevice();
             _daemon.ConnectToRemoteEkDevice();
-            _daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
-            _daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
+            _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetApplicationName);
+            _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetChannelId);
         }
 
         public void AttachBufferToEchogramSubscription()

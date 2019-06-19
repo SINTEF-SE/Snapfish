@@ -1,4 +1,4 @@
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
     public enum EkSeriesDataSubscriptionType
     {

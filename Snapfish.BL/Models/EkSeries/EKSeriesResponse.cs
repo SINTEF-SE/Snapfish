@@ -1,18 +1,18 @@
 using System.IO;
 
-namespace Snapfish.BL.Models
+namespace Snapfish.BL.Models.EkSeries
 {
-    public struct EK80Response: IConvertable<EK80Response>
+    public struct Ek80Response: IConvertable<Ek80Response>
     {
         public char[] Header; //"RES\0"
         public char[] Request; //4
         public char[] MsgControl; // 22
         public char[] MsgResponse; //1400
         
-        public EK80Response FromArray(byte[] bytes)
+        public Ek80Response FromArray(byte[] bytes)
         {
             var reader = new BinaryReader(new MemoryStream(bytes));
-            EK80Response s = default(EK80Response);
+            Ek80Response s = default(Ek80Response);
             s.Header = reader.ReadChars(4);
             s.Request = reader.ReadChars(4);
             s.MsgControl = reader.ReadChars(22);
