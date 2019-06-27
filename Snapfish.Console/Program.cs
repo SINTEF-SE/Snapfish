@@ -40,14 +40,23 @@ namespace Snapfish.Console
                 {
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     List<TargetsIntegration> biomass = recorder.CreateSubscribableFileData<TargetsIntegration>(EkSeriesDataSubscriptionType.TargetsIntegration).Result;
-                    CreateTransmissableDataPacket(echos, biomass);
+                    CreateTransmissableDataPacket(recorder, echos, biomass);
                 }
             }
         }
 
-        public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(List<Echogram> echos, List<TargetsIntegration> biomasses)
+        public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<TargetsIntegration> biomasses)
         {
             List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
+            EchogramTransmissionPacket packet = new EchogramTransmissionPacket();
+            packet.Latitude = recorder.GetLatitude();
+            packet.Longitude = recorder.GetLongitude();
+            packet.ApplicationName = recorder.GetApplicationName();
+            packet.ApplicationType
+            foreach (var echo in echos)
+            {
+                
+            }
             
             System.Console.WriteLine("yoyo");
 

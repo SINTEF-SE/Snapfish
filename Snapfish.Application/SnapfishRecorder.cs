@@ -53,6 +53,7 @@ namespace Snapfish.Application
             _daemon.ConnectToRemoteEkDevice();
             _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetApplicationName);
             _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetChannelId);
+            MakeDaemonFetchAttachGeoData();
         }
 
         public void AttachBufferToEchogramSubscription()
@@ -62,6 +63,32 @@ namespace Snapfish.Application
             _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
+        public void MakeDaemonFetchAttachGeoData()
+        {
+            _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.Latitude);
+            _daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.Longitude);
+        }
+        
+        public string GetLatitude()
+        {
+            return _daemon.Latitude;
+        }
+        
+        public string GetLongitude()
+        {
+            return _daemon.Longitude;
+        }
+
+        public string GetApplicationName()
+        {
+            return _daemon.ApplicationName;
+        }
+
+        public string GetApplicationType()
+        {
+            
+        }
+        
         public async Task<List<Echogram>> CreateEchogramFileData()
         {
             /*
@@ -69,12 +96,15 @@ namespace Snapfish.Application
              */
             List<Echogram> echos = await Task.Run(() => ConsumeChannel(_boundedBuffer.Reader)).ContinueWith(task => CreateEchogramFile(task));
             
+            
             /*Task<List<Echogram>> consumeTask = Consume(_boundedBuffer.Reader);
             consumeTask.Wait();
             List<Echogram> echos = consumeTask.Result;*/
             return echos;
         }
 
+        
+        
         public async Task<List<T>> CreateSubscribableFileData<T>(EkSeriesDataSubscriptionType type)
         {
             List<T> retval = new List<T>();
@@ -121,8 +151,25 @@ namespace Snapfish.Application
         {
             List<T> retval = task.Result;
 
+            
+            
             return retval;
         }
+        
+        public static List<T> ConsumeChannel<T>(ChannelReader<T> channelReader, int limit)
+        {
+            List<T> retval = new List<T>();
+            int i = 0;
+            while (channelReader.TryRead(out T item))
+            {
+                retval.Add(item);
+                if (++i > limit)
+                {
+                    break;
+                }
+            }
+            return retval;
+        } 
         
         /* For some reason this doesnt work */
         public static List<T> ConsumeChannel<T>(ChannelReader<T> channelReader)
