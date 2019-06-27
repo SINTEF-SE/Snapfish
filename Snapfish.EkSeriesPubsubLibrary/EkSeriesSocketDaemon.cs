@@ -31,13 +31,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static readonly ManualResetEvent SubscriptionReceiveEvent = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendQueueEmptied = new ManualResetEvent(false);
         private static readonly object SendLock = new object();
-        private static readonly int QueueSize = 256;
-        private static readonly int MaximumIncomingDatagrams = 1 << 8;
+        private const int QueueSize = 256;
+        private const int MaximumIncomingDatagrams = 1 << 8;
 
         private const int RemotePort = 37655;
         private const int ReceivePort = 8572;
 
-        private Object _responseObject;
+        private object _responseObject;
         private EkSeriesServerInfo _remoteEkSeriesInfo;
         private static ConnectRequestReponseStruct _connectRequestResponseStruct;
         private static ConnectionToEkSeriesDevice _currentActiveConnection; //TODO: LIST?
@@ -55,12 +55,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static uint _previousSelectedStateObject = 0;
         private static uint _previousSelectedSubscriptionStateObjectIndex = 0;
 
-        private static Boolean isRetransmitting = false;
+
+        private static Boolean _isRetransmitting = false;
+        public static bool _subscriptionMessageReceived = false;
+
 
         private static ConcurrentQueue<Ek80SendablePacketContainer> _sendQueue = new ConcurrentQueue<Ek80SendablePacketContainer>();
         private static readonly List<Ek80SendablePacketContainer> SentPackets = new List<Ek80SendablePacketContainer>();
 
-        //TODO: Consider moving thisa into a container class which is stateful for each daemon. A daemon might in theory be connected to multiple EK devices
+        //TODO: Consider moving this into a container class which is stateful for each daemon. A daemon might in theory be connected to multiple EK devices. However, this will also require us to port currentActiveConnection to multiple conncetions
 
         #region API_VALUES 
 
@@ -270,11 +273,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
         {
             try
             {
-                if (!isRetransmitting)
+                if (!_isRetransmitting)
                 {
                     while (!_sendQueue.IsEmpty)
                     {
-                        _sendQueue.TryPeek(out var structure);
+
+                        _sendQueue.TryPeek(out Ek80SendablePacketContainer structure);
+
                         Send(_currentActiveConnection.ActiveSocket, structure.SendableStruct.ToArray());
                         SendDone.WaitOne();
                         _logger.Info("Just sent a: " + structure.SendableStruct.GetName() + "   Packet" + " With SeqNo: " + structure.SendableStruct.GetSequenceNumber());
@@ -501,7 +506,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             lock (SendLock)
             {
                 _logger.Info("Entering retransmitPackage");
-                isRetransmitting = true;
+                _isRetransmitting = true;
 
                 var packetToSend = SentPackets.Find(a => a.SequenceNumber == sequenceNumber);
                 Send(_currentActiveConnection.ActiveSocket, packetToSend.SendableStruct.ToArray());
@@ -509,7 +514,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 _logger.Info("Just retransmitted: " + packetToSend.SendableStruct.GetName() + "   Packet" + " With SeqNo: " + packetToSend.SendableStruct.GetSequenceNumber());
             }
 
-            isRetransmitting = false;
+            _isRetransmitting = false;
         }
 
         private static bool ValidateResponseMessageFromEkSeriesDevice(IEnumerable<XElement> errorcodes)
@@ -865,63 +870,73 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
+        public EchogramTransmissionPacket GetEchogramTransmissionPacket(int limit)
+        {
+            EchogramTransmissionPacket retval = new EchogramTransmissionPacket();
+
+            
+            
+            return retval;
+        }
+        
+
         #region PARAMETER_GETTERS
 
-        public static string ApplicationName => _applicationName;
+        public string ApplicationName => _applicationName;
 
-        public static string ApplicationType => _applicationType;
+        public string ApplicationType => _applicationType;
 
-        public static string ApplicationDescription => _applicationDescription;
+        public string ApplicationDescription => _applicationDescription;
 
-        public static string ApplicationVersion => _applicationVersion;
+        public string ApplicationVersion => _applicationVersion;
 
-        public static string ChannelId => _channelID;
+        public string ChannelId => _channelID;
 
-        public static string Frequency => _frequency;
+        public string Frequency => _frequency;
 
-        public static string PulseLength => _pulseLength;
+        public string PulseLength => _pulseLength;
 
-        public static string SampleInterval => _sampleInterval;
+        public string SampleInterval => _sampleInterval;
 
-        public static string TransmitPower => _transmitPower;
+        public string TransmitPower => _transmitPower;
 
-        public static string AbsorptionCoefficient => _absorptionCoefficient;
+        public string AbsorptionCoefficient => _absorptionCoefficient;
 
-        public static string SoundVelocity => _soundVelocity;
+        public string SoundVelocity => _soundVelocity;
 
-        public static string TransducerName => _transducerName;
+        public string TransducerName => _transducerName;
 
-        public static string EquivalentBeamAngle => _equivalentBeamAngle;
+        public string EquivalentBeamAngle => _equivalentBeamAngle;
 
-        public static string AngleSensitivityAlongship => _angleSensitivityAlongship;
+        public string AngleSensitivityAlongship => _angleSensitivityAlongship;
 
-        public static string AngleSensitivityAthwartship => _angleSensitivityAthwartship;
+        public string AngleSensitivityAthwartship => _angleSensitivityAthwartship;
 
-        public static string BeamWidthAlongship => _beamWidthAlongship;
+        public string BeamWidthAlongship => _beamWidthAlongship;
 
-        public static string AngleOffsetAlongship => _angleOffsetAlongship;
+        public string AngleOffsetAlongship => _angleOffsetAlongship;
 
-        public static string Gain => _gain;
+        public string Gain => _gain;
 
-        public static string SaCorrection => _saCorrection;
+        public string SaCorrection => _saCorrection;
 
-        public static string PingTime => _pingTime;
+        public string PingTime => _pingTime;
 
-        public static string Latitude => _latitude;
+        public string Latitude => _latitude;
 
-        public static string Longitude => _longitude;
+        public string Longitude => _longitude;
 
-        public static string Heave => _heave;
+        public string Heave => _heave;
 
-        public static string Roll => _roll;
+        public string Roll => _roll;
 
-        public static string Pitch => _pitch;
+        public string Pitch => _pitch;
 
-        public static string Distance => _distance;
+        public string Distance => _distance;
 
-        public static string NoiseEstimate => _noiseEstimate;
+        public string NoiseEstimate => _noiseEstimate;
 
-        public static string ClientTimeoutLimit => _clientTimeoutLimit;
+        public string ClientTimeoutLimit => _clientTimeoutLimit;
 
         #endregion
 
