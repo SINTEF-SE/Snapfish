@@ -52,10 +52,12 @@ namespace Snapfish.Console
             packet.Latitude = recorder.GetLatitude();
             packet.Longitude = recorder.GetLongitude();
             packet.ApplicationName = recorder.GetApplicationName();
-            packet.ApplicationType
+            packet.ApplicationType = recorder.GetApplicationType();
+            packet.Echograms = echos;
+            packet.Biomass = biomasses;
             foreach (var echo in echos)
             {
-                
+                System.Console.WriteLine(echo.EchogramHeader.dlTime);
             }
             
             System.Console.WriteLine("yoyo");

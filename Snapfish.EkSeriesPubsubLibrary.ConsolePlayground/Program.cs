@@ -18,6 +18,13 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 SingleWriter = true,
                 SingleReader = false
             });
+            
+            Channel<TargetsIntegration> BiomassQueue =Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions((1 << 8))
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
             while (true)
             {
                 string key = Console.ReadLine();
@@ -43,7 +50,11 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 } else if (key.StartsWith("i"))
                 {
                     daemon.CreateEchogramSubscription(ref EchogramQueue);
-                } else if (key.StartsWith("j"))
+                } else if (key.StartsWith("k"))
+                {
+                    daemon.CreateBiomassSubscription(ref BiomassQueue);  
+                } 
+                else if (key.StartsWith("j"))
                 {
                     daemon.HandshakeWithEkSeriesDevice();
                     daemon.ConnectToRemoteEkDevice();
