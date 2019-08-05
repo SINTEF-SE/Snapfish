@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -109,13 +110,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private EchogramConfiguration _echogramConfiguration = new EchogramConfiguration();
 
         #endregion
-
-        #endregion
-
-        #region Subscribables
-
-        private Socket _subscriptionReceiver;
-        private UdpClient _subscriptionReceiveClient;
 
         #endregion
 
@@ -280,7 +274,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             {
                 if (!_isRetransmitting)
                 {
-                    if (SubscribableRequestsInTransit.Any())
+                   /* if (SubscribableRequestsInTransit.Any())
                     {
                         // Might need to retransmit the subscribable request because the EK device might not response and dont care. It doesnt go into the RTR queues, so we manually need to retransmitt
                         //Another way of doing this is chaining the multiple subscribables until one is finished, however, that would require specialized implementations and not be generic
@@ -299,7 +293,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 sub.ResetStopWatch();
                             }
                         }
-                    }
+                    }*/
                     
                     
                     while (!_sendQueue.IsEmpty)
@@ -386,7 +380,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                     break;
                 case EkSeriesDataSubscriptionType.TargetsIntegration:
-                    retval = "TargetsIntegration,ChannelID=" + _channelID + ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
+                    retval = "TargetsIntegration,ChannelID=" + _channelID +
+                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
                     break;
                 case EkSeriesDataSubscriptionType.NoiseSpectrum:
                     break;
@@ -827,11 +822,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                     DebugPrint("RECEIVING SUBSCRIPTION RESPONSE");
                                     var subscriptionNode = responseSubtree.Elements().FirstOrDefault(e => e.Name.LocalName == "subscriptionID");
                                     Console.WriteLine("Receive a subscribe reponse with id: " + subscriptionNode.ToString());
-                                    if (_subscriptionIdToTypeMap.ContainsKey(Int64.Parse(subscriptionNode.Value)))
-                                    {
-                                        break;
-                                    }
-                                    
                                     foreach (var req in SubscribableRequestsInTransit)
                                     {
                                         if (req.Id == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
@@ -839,8 +829,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                             SubscribableRequestsInTransit.Remove(req);
                                             break;
                                         }
-                                    } 
-
+                                    }                                   
+                                    
+                                    if (_subscriptionIdToTypeMap.ContainsKey(Int64.Parse(subscriptionNode.Value)))
+                                    {
+                                        break;
+                                    }
+                                    
                                     foreach (var packet in SentPackets.ToList()) //Need a copy of the list to avoid enumerating while the collection is being modified.
                                     {
                                         if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))

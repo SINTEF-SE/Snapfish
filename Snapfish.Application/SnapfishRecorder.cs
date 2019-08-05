@@ -61,6 +61,7 @@ namespace Snapfish.Application
         {
             _daemon.CreateEchogramSubscription(ref _boundedBuffer);
             //_daemon.CreateSampleDataSubscription(ref _sampleDataBoundedBuffer);
+            Thread.Sleep(1500);
             _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
