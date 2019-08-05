@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Snapfish.BL.Models;
@@ -60,6 +61,7 @@ namespace Snapfish.Application
         {
             _daemon.CreateEchogramSubscription(ref _boundedBuffer);
             //_daemon.CreateSampleDataSubscription(ref _sampleDataBoundedBuffer);
+            Thread.Sleep(1500);
             _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
@@ -86,7 +88,7 @@ namespace Snapfish.Application
 
         public string GetApplicationType()
         {
-            
+            return _daemon.ApplicationType;
         }
         
         public async Task<List<Echogram>> CreateEchogramFileData()
