@@ -19,12 +19,20 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 SingleReader = false
             });
             
-            Channel<TargetsIntegration> BiomassQueue =Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions((1 << 8))
+            Channel<TargetsIntegration> TargetsBiomassQueue =Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions((1 << 8))
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,
                 SingleReader = false
             });
+            
+            Channel<StructIntegrationData> BiomassQueue =Channel.CreateBounded<StructIntegrationData>(new BoundedChannelOptions((1 << 8))
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+            
             while (true)
             {
                 string key = Console.ReadLine();
@@ -52,8 +60,12 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                     daemon.CreateEchogramSubscription(ref EchogramQueue);
                 } else if (key.StartsWith("k"))
                 {
-                    daemon.CreateBiomassSubscription(ref BiomassQueue);  
+                    daemon.CreateTargetsBiomassSubscription(ref TargetsBiomassQueue);  
                 } 
+                else if (key.StartsWith("l"))
+                {
+                    daemon.CreateBiomassSubscription(ref BiomassQueue);
+                }
                 else if (key.StartsWith("j"))
                 {
                     daemon.HandshakeWithEkSeriesDevice();

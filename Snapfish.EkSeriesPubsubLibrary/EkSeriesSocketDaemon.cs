@@ -136,6 +136,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static Channel<Echogram> _echogramSubscriptionQueue = null;
         private static Channel<SampleDataContainerClass> _sampleDataSubscriptionQueue = null;
         private static Channel<TargetsIntegration> _targetsIntegration = null;
+        private static Channel<StructIntegrationData> _integrationData = null;
         
         public EkSeriesSocketDaemon()
         {
@@ -376,6 +377,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                              ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
                     break;
                 case EkSeriesDataSubscriptionType.Integration:
+                    retval = "Integration,ChannelID=" + _channelID + ",State=Start,Update=UpdatePing,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0";
                     break;
                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                     break;
@@ -610,11 +612,16 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 case EkSeriesDataSubscriptionType.TargetsEchogram:
                                     break;
                                 case EkSeriesDataSubscriptionType.Integration:
+                                    StructIntegrationData integrationData = StructIntegrationData.FromArray(processedData.DataAsBytes);
+                                    if (!_integrationData.Writer.TryWrite(integrationData))
+                                    {
+                                        Console.WriteLine("\"COULD NOT WRITE INTEGRATION TO CHANNEL! W00t\"");
+                                        _logger.Alert("COULD NOT WRITE INTEGRATION TO CHANNEL! W00t");
+                                    }
                                     break;
                                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                                     break;
                                 case EkSeriesDataSubscriptionType.TargetsIntegration:
-                                    DebugPrint("RECEIVING TARGETS DATA ");
                                     TargetsIntegration integration = TargetsIntegration.FromArray(processedData.DataAsBytes);
                                     if (!_targetsIntegration.Writer.TryWrite(integration))
                                     {
@@ -1178,10 +1185,16 @@ namespace Snapfish.EkSeriesPubsubLibrary
             SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
         }
 
-        public void CreateBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
+        public void CreateTargetsBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
         {
             _targetsIntegration = targetsIntegrationQueue;
             SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.TargetsIntegration);
+        }
+        
+        public void CreateBiomassSubscription(ref Channel<StructIntegrationData> IntegrationQueue)
+        {
+            _integrationData = IntegrationQueue;
+            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Integration);
         }
 
         //_sampleDataSubscriptionQueue

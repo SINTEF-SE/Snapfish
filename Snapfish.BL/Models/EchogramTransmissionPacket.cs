@@ -5,6 +5,7 @@ namespace Snapfish.BL.Models
 {
     public class EchogramTransmissionPacket
     {
+        public int Id { get; set; }
         public string ApplicationName { get; set; }
         public string ApplicationType { get; set; }
         public string ApplicationDescription  { get; set; }
@@ -16,6 +17,7 @@ namespace Snapfish.BL.Models
         public List<string> Latitudes { get; set; } // TODO
         public List<Echogram> Echograms { get; set; }
         public List<SampleDataContainerClass> SampleData { get; set; }
-        public List<TargetsIntegration> Biomass { get; set; }
+        public List<StructIntegrationData> Biomasses { get; set; }
+        public List<TargetsIntegration> TargetsBiomass { get; set; }
     }
 }

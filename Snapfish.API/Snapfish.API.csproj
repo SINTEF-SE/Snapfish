@@ -57,6 +57,14 @@
       <ProjectReference Include="..\Snapfish.Infrastructure\Snapfish.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Commands" />
+      <Folder Include="Mappers" />
+      <Folder Include="Models" />
+      <Folder Include="Repositories" />
+      <Folder Include="ViewModelSchemaFilters" />
+    </ItemGroup>
+
     <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
         <ItemGroup>
             <DocFile Include="bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\*.xml" />
