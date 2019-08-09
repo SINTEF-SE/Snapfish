@@ -28,6 +28,8 @@ namespace Snapfish.AlwaysOnTop
             MessageBox.Show("Snap succesfully uploaded");
         }
 
+        static string SNAPFISH_HOST = "http://localhost:5000/"; 
+
         public static async Task<bool> PostSnap()
         {
             using (var client = new HttpClient())
@@ -36,7 +38,7 @@ namespace Snapfish.AlwaysOnTop
                 {
                     new KeyValuePair<string, string>("id", "1"), 
                 });
-                var result = await client.PostAsync("IPADDR/api/snap/upload", postTableContent);
+                var result = await client.PostAsync(SNAPFISH_HOST + "api/echograminfos", postTableContent);
                 string resultContent = await result.Content.ReadAsStringAsync();
                 System.Console.WriteLine(resultContent);
             }
