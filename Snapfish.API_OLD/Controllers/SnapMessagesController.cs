@@ -18,12 +18,6 @@ namespace Snapfish.API.Controllers
         public SnapMessagesController(SnapContext context)
         {
             _context = context;
-            /*            if (_context.SnapMessages.Count() == 0)
-                        {
-                            _context.SnapMessages.Add(new SnapMessage { Title = "First snap!", Sender = "Ola", SendTimestamp = DateTime.Now });
-                            _context.SaveChanges();
-                        }*/
-
         }
 
         // GET: api/SnapMessage
@@ -66,11 +60,12 @@ namespace Snapfish.API.Controllers
             if (snap == null)
             {
                 return NotFound();
-            } 
+            }
 
             return snap; 
         }
-
+        
+        
         // POST: api/SnapMessage
         [HttpPost]
         public async Task<ActionResult<SnapMessage>> PostSnapMessage(SnapMessage item)

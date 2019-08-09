@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Snapfish.Application;
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.Console
 {
@@ -14,7 +15,7 @@ namespace Snapfish.Console
         {
             SnapfishRecorder recorder = new SnapfishRecorder();
             recorder.InstallDaemon();
-            Thread.Sleep(5000);
+            Thread.Sleep(7000);
             recorder.AttachBufferToEchogramSubscription();
             while (true)
             {
@@ -25,7 +26,6 @@ namespace Snapfish.Console
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     if (echos != null)
                     {
-                        //COol
                         System.Console.WriteLine("uuh");
                     }
                 }  else if (key.StartsWith("b"))
@@ -35,33 +35,67 @@ namespace Snapfish.Console
                 {
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     List<SampleDataContainerClass> sampleData = recorder.CreateSubscribableFileData<SampleDataContainerClass>(EkSeriesDataSubscriptionType.SampleData).Result;
-                    CreateTransmissableDataPacket(echos, sampleData);
-                } 
+                    //CreateTransmissableDataPacket(recorder, echos, sampleData);
+                } else if (key.StartsWith("f"))
+                {
+                    List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+                    List<TargetsIntegration> biomass = recorder.CreateSubscribableFileData<TargetsIntegration>(EkSeriesDataSubscriptionType.TargetsIntegration).Result;
+                    var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
+                    UploadSnap(packet);
+                }
             }
         }
 
-        public static List<EchogramTransmissionPacket> CreateTransmissableDataPacket(List<Echogram> echos, List<SampleDataContainerClass> biomasses)
+        public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<TargetsIntegration> biomasses)
         {
-            List<EchogramTransmissionPacket> snapData = new List<EchogramTransmissionPacket>();
-
-            
-            
-            System.Console.WriteLine("Yo");
-
-            return snapData;
+            EchogramTransmissionPacket packet = new EchogramTransmissionPacket();
+            packet.Latitude = recorder.GetLatitude();
+            packet.Longitude = recorder.GetLongitude();
+            packet.ApplicationName = recorder.GetApplicationName();
+            packet.ApplicationType = recorder.GetApplicationType();
+            packet.Echograms = echos;
+            packet.TargetsBiomass = biomasses;
+            foreach (var echo in echos)
+            {
+                System.Console.WriteLine(echo.EchogramHeader.dlTime);
+            }
+            packet.Echograms = echos;
+            packet.TargetsBiomass = biomasses;
+            return packet;
         }
         
-        public async void UploadSnap(List<EchogramTransmissionPacket> packets)
+        public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<StructIntegrationData> biomasses)
         {
+            EchogramTransmissionPacket packet = new EchogramTransmissionPacket();
+            packet.Latitude = recorder.GetLatitude();
+            packet.Longitude = recorder.GetLongitude();
+            packet.ApplicationName = recorder.GetApplicationName();
+            packet.ApplicationType = recorder.GetApplicationType();
+            packet.Echograms = echos;
+            packet.Biomasses = biomasses;
+            foreach (var echo in echos)
+            {
+                System.Console.WriteLine(echo.EchogramHeader.dlTime);
+            }
+            packet.Echograms = echos;
+            packet.Biomasses = biomasses;
+            return packet;
+        }
+        
+        public static async void UploadSnap(EchogramTransmissionPacket packets)
+        {
+            string retval = "";
             using (var client = new HttpClient())
             {
-                var content = new FormUrlEncodedContent(new[]
-                                   {
-                                       new KeyValuePair<string, string>("", "upload")
-                                   });
-                var result = await client.PostAsync("/api/snap/upload", content);
+                var postTableContent = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("id", "1"), 
+                });
+                
+                var result = await client.PostAsync("http://10.218.69.76:5002/api/EchogramInfos/", postTableContent);
                 string resultContent = await result.Content.ReadAsStringAsync();
-                System.Console.WriteLine(resultContent);
+                retval = resultContent;
+                System.Console.WriteLine(retval);
             }
         }
     }

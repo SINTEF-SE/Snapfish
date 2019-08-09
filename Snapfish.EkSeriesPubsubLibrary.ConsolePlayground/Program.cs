@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
 {
@@ -17,6 +18,21 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 SingleWriter = true,
                 SingleReader = false
             });
+            
+            Channel<TargetsIntegration> TargetsBiomassQueue =Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions((1 << 8))
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+            
+            Channel<StructIntegrationData> BiomassQueue =Channel.CreateBounded<StructIntegrationData>(new BoundedChannelOptions((1 << 8))
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+            
             while (true)
             {
                 string key = Console.ReadLine();
@@ -30,24 +46,32 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 }
                 else if (key.StartsWith("p"))
                 {
-                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
+                    daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetApplicationName);
                 }
                 else if (key.StartsWith("a"))
                 {
-                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
+                    daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetChannelId);
                 }
                 else if (key.StartsWith("S"))
                 {
-                    daemon.SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
+                    daemon.SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
                 } else if (key.StartsWith("i"))
                 {
                     daemon.CreateEchogramSubscription(ref EchogramQueue);
-                } else if (key.StartsWith("j"))
+                } else if (key.StartsWith("k"))
+                {
+                    daemon.CreateTargetsBiomassSubscription(ref TargetsBiomassQueue);  
+                } 
+                else if (key.StartsWith("l"))
+                {
+                    daemon.CreateBiomassSubscription(ref BiomassQueue);
+                }
+                else if (key.StartsWith("j"))
                 {
                     daemon.HandshakeWithEkSeriesDevice();
                     daemon.ConnectToRemoteEkDevice();
-                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetApplicationName);
-                    daemon.SendParameterRequestToEkSeriesDevice(ParameterRequestType.GET_PARAMETER, ParameterType.GetChannelId);
+                    daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetApplicationName);
+                    daemon.SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest.GET_PARAMETER, EkSeriesParameterType.GetChannelId);
                 }
             }
         }

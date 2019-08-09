@@ -20,29 +20,30 @@ namespace Snapfish.AlwaysOnTop
 
         private void OnSnapButtonClicked(object sender, RoutedEventArgs e)
         {
-            Task.Run(PostSnap).ContinueWith(task => displayMessageBoxOnSuccessfullSnapSent());
+            Task.Run(PostSnap).ContinueWith(task => displayMessageBoxOnSuccessfullSnapSent(task));
         }
 
-        private void displayMessageBoxOnSuccessfullSnapSent()
+        private void displayMessageBoxOnSuccessfullSnapSent(Task<string> task)
         {
             MessageBox.Show("Snap succesfully uploaded");
         }
 
-        static string SNAPFISH_HOST = "http://localhost:5000/"; 
-
-        public static async Task<bool> PostSnap()
+        public static async Task<string> PostSnap()
         {
+            string retval = "";
             using (var client = new HttpClient())
             {
                 var postTableContent = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("id", "1"), 
                 });
-                var result = await client.PostAsync(SNAPFISH_HOST + "api/echograminfos", postTableContent);
+                
+                var result = await client.PostAsync("http://10.218.69.76:5002/api/EchogramInfos/", postTableContent);
                 string resultContent = await result.Content.ReadAsStringAsync();
-                System.Console.WriteLine(resultContent);
+                retval = resultContent;
+                System.Console.WriteLine(retval);
             }
-            return true;
+            return retval;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,6 +14,8 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Snapfish.BL.Extensions;
 using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
+using Snapfish.BL.Models.Logging;
 using Snapfish.EkSeriesPubsubLibrary.Domain;
 
 namespace Snapfish.EkSeriesPubsubLibrary
@@ -22,55 +25,83 @@ namespace Snapfish.EkSeriesPubsubLibrary
      */
     public class EkSeriesSocketDaemon
     {
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.70");
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.55");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SubscriptionReceiveEvent = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendQueueEmptied = new ManualResetEvent(false);
         private static readonly object SendLock = new object();
-        private static readonly int QueueSize = 256;
-        private static readonly int MaximumIncomingDatagrams = 1 << 8;
+        private const int QueueSize = 256;
+        private const int MaximumIncomingDatagrams = 1 << 8;
+        private const int MillisecondsUntilSubscribableRetransmission = 2500;
 
         private const int RemotePort = 37655;
-        private const int _receivePort = 8572;
+        private const int ReceivePort = 8572;
 
-        private Object _responseObject;
-        private ServerInfo _remoteEkSeriesInfo;
-        private static ConnectRequestReponseStruct _connectRequestReponseStruct;
+        private object _responseObject;
+        private EkSeriesServerInfo _remoteEkSeriesInfo;
+        private static ConnectRequestReponseStruct _connectRequestResponseStruct;
         private static ConnectionToEkSeriesDevice _currentActiveConnection; //TODO: LIST?
+
         private static Dictionary<long, EkSeriesDataSubscriptionType> _subscriptionIdToTypeMap = new Dictionary<long, EkSeriesDataSubscriptionType>();
-        //private static List<EkSeriesSubscriptionResponse> SubscriptionRequestResponseMapper = new List<EkSeriesSubscriptionResponse>();
 
         /*
-         * Max 100 concurrent 'connections' actually UDP datagrams incoming, because there is a bug in the socket implmentation in c# which makes the overlapped memory region un-freeable
+         * Max 256 concurrent 'connections' actually UDP datagrams incoming, because there is a bug in the socket implmentation in c# which makes the overlapped memory region un-freeable
          */
         private static StateObject[]
             _stateObjects = new StateObject[MaximumIncomingDatagrams];
 
         private static StateObject[] _subscriptionStateObjects = new StateObject[MaximumIncomingDatagrams];
 
-        private static uint _previousSelectedStateObject = 0;
+        static uint _previousSelectedStateObject = 0;
         private static uint _previousSelectedSubscriptionStateObjectIndex = 0;
 
-        private static Boolean isRetransmitting = false;
-        private static bool _subscriptionMessageReceived = false;
+
+        private static Boolean _isRetransmitting = false;
+        public static bool _subscriptionMessageReceived = false;
+
 
         private static ConcurrentQueue<Ek80SendablePacketContainer> _sendQueue = new ConcurrentQueue<Ek80SendablePacketContainer>();
         private static readonly List<Ek80SendablePacketContainer> SentPackets = new List<Ek80SendablePacketContainer>();
-
-        //TODO: Consider moving thisa into a container class which is stateful for each daemon. A daemon might in theory be connected to multiple EK devices
+        private static IList<SentSubscribableRequest> SubscribableRequestsInTransit;
+        
+        
+        //TODO: Consider moving this into a container class which is stateful for each daemon. A daemon might in theory be connected to multiple EK devices. However, this will also require us to port currentActiveConnection to multiple conncetions
 
         #region API_VALUES 
 
         #region Parameters
 
-        private static ParameterType _currentParameterRequestType;
+        private static EkSeriesParameterType _currentEkSeriesParameterRequestType;
         private static string _applicationName;
         private static string _applicationType;
         private static string _applicationDescription;
         private static string _applicationVersion;
         private static string _channelID;
+        private static string _frequency;
+        private static string _pulseLength;
+        private static string _sampleInterval;
+        private static string _transmitPower;
+        private static string _absorptionCoefficient;
+        private static string _soundVelocity;
+        private static string _transducerName;
+        private static string _equivalentBeamAngle;
+        private static string _angleSensitivityAlongship;
+        private static string _angleSensitivityAthwartship;
+        private static string _beamWidthAlongship;
+        private static string _angleOffsetAlongship;
+        private static string _gain;
+        private static string _saCorrection;
+        private static string _pingTime;
+        private static string _latitude;
+        private static string _longitude;
+        private static string _heave;
+        private static string _roll;
+        private static string _pitch;
+        private static string _distance;
+        private static string _noiseEstimate;
+        private static string _clientTimeoutLimit;
 
         //TODO: Make these configurable and storable
 
@@ -79,13 +110,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private EchogramConfiguration _echogramConfiguration = new EchogramConfiguration();
 
         #endregion
-
-        #endregion
-
-        #region Subscribables
-
-        private Socket _subscriptionReceiver;
-        private UdpClient _subscriptionReceiveClient;
 
         #endregion
 
@@ -105,17 +129,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private const string ApplicationLoggingPrefix = "Snapfish-logger:";
 
         #endregion
-
-        // This might be moved/removed
-        //private readonly IEventBus _eventBus = null;
-
-
+        
         /*
          * THIS IS TRASH! TODO: REMOVE ME AND STUFF FURUTHER DOWN WHEN WE KNOW HOW WE ARE GOING TO IMPLEMENT THIS
          */
         private static Channel<Echogram> _echogramSubscriptionQueue = null;
         private static Channel<SampleDataContainerClass> _sampleDataSubscriptionQueue = null;
-
+        private static Channel<TargetsIntegration> _targetsIntegration = null;
+        private static Channel<StructIntegrationData> _integrationData = null;
+        
         public EkSeriesSocketDaemon()
         {
             InitializeLogger();
@@ -126,15 +148,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 _stateObjects[i] = new StateObject();
                 _subscriptionStateObjects[i] = new StateObject();
             }
+            SubscribableRequestsInTransit = new List<SentSubscribableRequest>();
         }
-
-        /*   public EkSeriesSocketDaemon(IEventBus eventBus)
-            {
-                _eventBus = eventBus;
-                InitializeLogger();
-                _logger.Info(
-                    "===================================|Booting up snapfish daemon|===================================");
-            } */
 
         #region Logging
 
@@ -157,6 +172,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         #endregion
 
+        
 
         public void PublishSubscribable()
         {
@@ -186,20 +202,20 @@ namespace Snapfish.EkSeriesPubsubLibrary
             SendDone.WaitOne();
 
             _logger.Info("Going to receive RSI");
-            ReceiveSafeStruct<ServerInfo>(client);
+            ReceiveSafeStruct<EkSeriesServerInfo>(client);
             ReceiveDone.WaitOne();
 
-            _remoteEkSeriesInfo = (ServerInfo) _responseObject;
+            _remoteEkSeriesInfo = (EkSeriesServerInfo) _responseObject;
 
             #region DEBUG
 
             Console.WriteLine("Completed handshake with: " + new string(_remoteEkSeriesInfo.ApplicationName) + " with description: " +
                               new string(_remoteEkSeriesInfo.ApplicationDescription));
-            Console.WriteLine("The current ApplicationID is: " + _remoteEkSeriesInfo.ApplicationID + "\n" + "The remote processor unit has the following info + " +
+            Console.WriteLine("The current ApplicationID is: " + _remoteEkSeriesInfo.ApplicationId + "\n" + "The remote processor unit has the following info + " +
                               "\n\tHostName: " + new string(_remoteEkSeriesInfo.HostName) + "\n\tCommandPort: " + _remoteEkSeriesInfo.CommandPort);
             _logger.Info("Completed handshake with: " + new string(_remoteEkSeriesInfo.ApplicationName) + " with description: " +
                          new string(_remoteEkSeriesInfo.ApplicationDescription));
-            _logger.Info("The current ApplicationID is: " + _remoteEkSeriesInfo.ApplicationID + "\n" + "The remote processor unit has the following info + " +
+            _logger.Info("The current ApplicationID is: " + _remoteEkSeriesInfo.ApplicationId + "\n" + "The remote processor unit has the following info + " +
                          "\n\tHostName: " + new string(_remoteEkSeriesInfo.HostName) + "\n\tCommandPort: " + _remoteEkSeriesInfo.CommandPort
             );
 
@@ -209,36 +225,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
             client.Close();
         }
 
-        //TODO: REMOVE ME, NOT NEEDED
-        private static void EnqueuePacketToQueue(ISendableStruct package, int SequenceNumber)
-        {
-            Ek80SendablePacketContainer container = new Ek80SendablePacketContainer {SendableStruct = package, SequenceNumber = SequenceNumber};
-            if (_sendQueue.Count >= QueueSize)
-            {
-                for (int i = 0; i < QueueSize / 2; i++)
-                {
-                    Ek80SendablePacketContainer tmp;
-                    _sendQueue.TryDequeue(out tmp);
-                }
-            }
-
-            _sendQueue.Enqueue(container);
-            EnqueueToOldPacketList(package, SequenceNumber);
-        }
-
-        private static void EnqueueToOldPacketList(ISendableStruct package, int sequenceNumber)
-        {
-            Ek80SendablePacketContainer container = new Ek80SendablePacketContainer {SendableStruct = package, SequenceNumber = sequenceNumber};
-            if (SentPackets.Count >= QueueSize)
-            {
-                for (int i = 0; i < QueueSize / 2; i++)
-                {
-                    SentPackets.RemoveAt(0);
-                }
-            }
-
-            SentPackets.Add(container);
-        }
 
         public void ConnectToRemoteEkDevice()
         {
@@ -251,51 +237,71 @@ namespace Snapfish.EkSeriesPubsubLibrary
             Send(client, request);
             SendDone.WaitOne();
 
-            ReceiveSafeStruct<EK80Response>(client);
+            ReceiveSafeStruct<Ek80Response>(client);
             ReceiveDone.WaitOne();
 
-            EK80Response response = (EK80Response) _responseObject;
-            _connectRequestReponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
+            Ek80Response response = (Ek80Response) _responseObject;
+            _connectRequestResponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
 
             #region DEBUG // IFDEBUG?
 
             Console.WriteLine("Received a response to the connection request with the following info:\n" +
-                              "\tResultCode: " + _connectRequestReponseStruct.ResultCode + "\n" +
-                              "\tClientID: " + _connectRequestReponseStruct.ClientID + "\n" +
-                              "\tAccessLevel: " + _connectRequestReponseStruct.AccessLevel + "\n");
+                              "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                              "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
+                              "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
             _logger.Debug("Received a response to the connection request with the following info:\n" +
-                          "\tResultCode: " + _connectRequestReponseStruct.ResultCode + "\n" +
-                          "\tClientID: " + _connectRequestReponseStruct.ClientID + "\n" +
-                          "\tAccessLevel: " + _connectRequestReponseStruct.AccessLevel + "\n");
+                          "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                          "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
+                          "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
 
             #endregion
 
             _currentActiveConnection = new ConnectionToEkSeriesDevice {ActiveSocket = client, SequenceNumber = 1};
             Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket),
                 TaskCreationOptions.LongRunning);
-            Thread sendThread = new Thread(new ThreadStart(SendThreadMethod)) {IsBackground = true};
+            Thread sendThread = new Thread(SendThreadMethod) {IsBackground = true};
 
             IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
             Socket subscriptionReceiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             subscriptionReceiver.Bind(e);
-            //Thread receiveThread = new Thread(new ThreadStart(SubscriptionReceiver)) {IsBackground = true};
             sendThread.Start();
-            Task.Factory.StartNew(() => SubscrptionSocketReceiver(subscriptionReceiver),
+            Task.Factory.StartNew(() => SubscriptionSocketReceiver(subscriptionReceiver),
                 TaskCreationOptions.RunContinuationsAsynchronously);
-            //receiveThread.Start();
         }
 
-        //TODO: Use size for RTR on 256, pop 128
         private void SendPacketsFromQueueInOrder()
         {
             try
             {
-                if (!isRetransmitting)
+                if (!_isRetransmitting)
                 {
+                   /* if (SubscribableRequestsInTransit.Any())
+                    {
+                        // Might need to retransmit the subscribable request because the EK device might not response and dont care. It doesnt go into the RTR queues, so we manually need to retransmitt
+                        //Another way of doing this is chaining the multiple subscribables until one is finished, however, that would require specialized implementations and not be generic
+                        foreach (var sub in SubscribableRequestsInTransit)
+                        {
+                            if (sub.GetElapsedTimeInMilliseconds() > MillisecondsUntilSubscribableRetransmission)
+                            {
+                                DebugPrint("RETRANSMITTING REQUEST WITH RID: " + sub.Id);
+                                _logger.Info("RETRANSMITTING SUBSCRIBABLE WITH RID: " + sub.Id);
+                                var request = sub.SubscriptionRequest;
+                                Send(_currentActiveConnection.ActiveSocket, request.ToArray());
+                                SendDone.WaitOne();
+                                
+                                // HERE DO COOL STUFF
+                                _logger.Info("Retransmitted subscription request with ID: " + sub.Id);
+                                sub.ResetStopWatch();
+                            }
+                        }
+                    }*/
+                    
+                    
                     while (!_sendQueue.IsEmpty)
                     {
-                        Ek80SendablePacketContainer structure;
-                        _sendQueue.TryPeek(out structure);
+
+                        _sendQueue.TryPeek(out Ek80SendablePacketContainer structure);
+
                         Send(_currentActiveConnection.ActiveSocket, structure.SendableStruct.ToArray());
                         SendDone.WaitOne();
                         _logger.Info("Just sent a: " + structure.SendableStruct.GetName() + "   Packet" + " With SeqNo: " + structure.SendableStruct.GetSequenceNumber());
@@ -324,8 +330,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
+        private void CheckIfSubscribableNeedsToBeRetransmitted()
+        {
+            
+        }
 
-        private void SubscrptionSocketReceiver(Socket receiveSocket)
+
+        private void SubscriptionSocketReceiver(Socket receiveSocket)
         {
             while (true)
             {
@@ -362,12 +373,17 @@ namespace Snapfish.EkSeriesPubsubLibrary
                              "," + "RangeStart=" + _echogramConfiguration.RangeStart + ",";
                     break;
                 case EkSeriesDataSubscriptionType.TargetsEchogram:
+                    retval = "TargetsIntegration,ChannelID=" + _channelID +
+                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
                     break;
                 case EkSeriesDataSubscriptionType.Integration:
+                    retval = "Integration,ChannelID=" + _channelID + ",State=Start,Update=UpdatePing,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0";
                     break;
                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                     break;
                 case EkSeriesDataSubscriptionType.TargetsIntegration:
+                    retval = "TargetsIntegration,ChannelID=" + _channelID +
+                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
                     break;
                 case EkSeriesDataSubscriptionType.NoiseSpectrum:
                     break;
@@ -378,50 +394,82 @@ namespace Snapfish.EkSeriesPubsubLibrary
             return retval;
         }
 
-        public void SendSubscriptionRequest(Ek80RequestType requestType, EkSeriesDataSubscriptionType subscriptionType)
+        public void SendSubscriptionRequest(EkSeriesRequestType requestType, EkSeriesDataSubscriptionType subscriptionType)
         {
             CommandRequest request = new CommandRequest {Header = "REQ\0".ToCharArray()};
             string method = "";
             string dataSubscriptionType = CreateDataSubscribableMethodInvocationString(subscriptionType);
             switch (requestType)
             {
-                case Ek80RequestType.CreateDataSubscription:
+                case EkSeriesRequestType.CreateDataSubscription:
                     method = "Subscribe";
                     break;
-                case Ek80RequestType.ChangeDataSubscription:
+                case EkSeriesRequestType.ChangeDataSubscription:
                     method = "ChangeSubscription";
                     break;
-                case Ek80RequestType.DestroyDataSubscription:
+                case EkSeriesRequestType.DestroyDataSubscription:
                     method = "Unsubscribe";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(requestType), requestType, null);
             }
 
-            if (subscriptionType == EkSeriesDataSubscriptionType.Echogram)
+            #if DEBUG
+            #region DEBUG_REGION
+            
+            switch (subscriptionType)
             {
-                Console.WriteLine("Sending echogram request with RID::" + _currentActiveConnection.SequenceNumber);
+                case EkSeriesDataSubscriptionType.Echogram:
+                    Console.WriteLine("Sending echogram request with RID::" + _currentActiveConnection.SequenceNumber);
+                    _logger.Info("Sending echogram request with RID::" + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.SampleData:
+                    Console.WriteLine("SENDING SampleData REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    _logger.Info("SENDING SampleData REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.TargetsIntegration:
+                    Console.WriteLine("SENDING BIOMASS REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    _logger.Info("SENDING BIOMASS REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.BottomDetection:
+                    Console.WriteLine("SENDING Bottom Detection WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.TargetStrengthTsDetection:
+                    Console.WriteLine("SENDING TargetStrengthDetection WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.TargetStrengthTsDetectionChirp:
+                    Console.WriteLine("SENDING TargetStrengthDetection Chirp WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.TargetsEchogram:
+                    Console.WriteLine("SENDING TARGETS ECHOGRAM WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.Integration:
+                    Console.WriteLine("SENDING INTEGRATION WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.IntegrationChirp:
+                    Console.WriteLine("SENDING INTEGRATION CHIRP WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                case EkSeriesDataSubscriptionType.NoiseSpectrum:
+                    Console.WriteLine("SENDING Noise Spectrum WITH RID:: " + _currentActiveConnection.SequenceNumber);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(subscriptionType), subscriptionType, null);
             }
-            else if (subscriptionType == EkSeriesDataSubscriptionType.SampleData)
-            {
-                Console.WriteLine("SENDING BIOMASS REQUEST WITH RID:: " + _currentActiveConnection.SequenceNumber);
-            }
+            #endregion
 
-    //        SubscriptionRequestResponseMapper.Add(new EkSeriesSubscriptionResponse()
-    //            {RequestId = _currentActiveConnection.SequenceNumber, SubscriptionId = SubscriptionRequestResponseMapper.Count + 1, SubscriptionType = subscriptionType});
-
-
+            #endif
+            
             request.MsgControl = (_currentActiveConnection.SequenceNumber + ",1,1\0\0\0\0").ToCharArray();
             request.MsgRequest = ("<request>" +
                                   "<clientInfo>" +
-                                  "<cid>" + _connectRequestReponseStruct.ClientID + "</cid>" +
+                                  "<cid>" + _connectRequestResponseStruct.ClientID + "</cid>" +
                                   "<rid>" + _currentActiveConnection.SequenceNumber + "</rid>" +
                                   "</clientInfo>" +
                                   "<type>invokeMethod</type>" +
                                   "<targetComponent>RemoteDataServer</targetComponent>" +
                                   "<method>" +
                                   "<" + method + ">" +
-                                  "<requestedPort>" + _receivePort.ToString() + "</requestedPort>" +
+                                  "<requestedPort>" + ReceivePort.ToString() + "</requestedPort>" +
                                   "<dataRequest>" + dataSubscriptionType + "</dataRequest>" +
                                   "</" + method + ">" +
                                   "</method>" +
@@ -429,10 +477,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 ).ToCharArray();
             request.SetRequestType("Subscription");
             request.SetMethodInvocationType(subscriptionType.ToString());
+            // For some reason, this is needed ?!
+            if (requestType == EkSeriesRequestType.CreateDataSubscription)
+            {
+                SubscribableRequestsInTransit.Add(new SentSubscribableRequest(subscriptionType, _currentActiveConnection.SequenceNumber, request));
+            }
             EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber++);
         }
 
-        public void SendParameterRequestToEkSeriesDevice(ParameterRequestType parameterRequest, ParameterType parameterType)
+        public void SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest ekSeriesParameterRequest, EkSeriesParameterType ekSeriesParameterType)
         {
             CommandRequest request = new CommandRequest
             {
@@ -440,30 +493,30 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 MsgControl = (_currentActiveConnection.SequenceNumber + ",1,1\0\0\0\0").ToCharArray(),
                 MsgRequest = ("<request>" +
                               "<clientInfo>" +
-                              "<cid>" + _connectRequestReponseStruct.ClientID + "</cid>" +
+                              "<cid>" + _connectRequestResponseStruct.ClientID + "</cid>" +
                               "<rid>" + _currentActiveConnection.SequenceNumber + "</rid>" +
                               "</clientInfo>" +
                               "<type>invokeMethod</type>" +
                               "<targetComponent>ParameterServer</targetComponent>" +
                               "<method>" +
                               "<GetParameter>" +
-                              "<paramName>" + parameterType.GetParameterName() + "</paramName>" +
+                              "<paramName>" + ekSeriesParameterType.GetParameterName() + "</paramName>" +
                               "<time>0</time>" +
                               "</GetParameter>" +
                               "</method>" +
                               "</request>\0").ToCharArray()
             };
-            _currentParameterRequestType = parameterType;
+            _currentEkSeriesParameterRequestType = ekSeriesParameterType;
             request.SetRequestType("Parameter");
-            request.SetMethodInvocationType(parameterType.ToString());
+            request.SetMethodInvocationType(ekSeriesParameterType.ToString());
             EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber);
             _currentActiveConnection.SequenceNumber++;
+            DebugPrint("Just sent a parameter request to the EK-Device with the following info: " + new string(request.MsgControl)  + "  ::  " + new string(request.MsgRequest));
         }
 
         private ConnectRequestReponseStruct ParseResultsFromEkSeriesDevice(string response)
         {
-            ConnectRequestReponseStruct retval = new ConnectRequestReponseStruct();
-            retval.ResultCode = response.GetUntilOrEmpty(",").Replace("ResultCode:", "");
+            ConnectRequestReponseStruct retval = new ConnectRequestReponseStruct {ResultCode = response.GetUntilOrEmpty(",").Replace("ResultCode:", "")};
             switch (retval.ResultCode)
             {
                 case "S_OK":
@@ -484,24 +537,12 @@ namespace Snapfish.EkSeriesPubsubLibrary
             return retval;
         }
 
-        // TODO: Move me into the struct and create aux methods on the actual struct once shit....works
-        private static AliveReport GenerateAliveReport(int sequenceNumber)
-        {
-            return new AliveReport
-            {
-                Header = "ALI\0".ToCharArray(),
-                Info = ("ClientID:" + _connectRequestReponseStruct.ClientID + ",SeqNo:" +
-                        sequenceNumber + "\0").ToCharArray()
-            };
-        }
-
         private static void RetransmitPackage(int sequenceNumber)
         {
             lock (SendLock)
             {
-                //retransmit
                 _logger.Info("Entering retransmitPackage");
-                isRetransmitting = true;
+                _isRetransmitting = true;
 
                 var packetToSend = SentPackets.Find(a => a.SequenceNumber == sequenceNumber);
                 Send(_currentActiveConnection.ActiveSocket, packetToSend.SendableStruct.ToArray());
@@ -509,7 +550,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 _logger.Info("Just retransmitted: " + packetToSend.SendableStruct.GetName() + "   Packet" + " With SeqNo: " + packetToSend.SendableStruct.GetSequenceNumber());
             }
 
-            isRetransmitting = false;
+            _isRetransmitting = false;
         }
 
         private static bool ValidateResponseMessageFromEkSeriesDevice(IEnumerable<XElement> errorcodes)
@@ -557,6 +598,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE SampleData TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE SampleData TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.Echogram:
                                     Echogram echogram = Echogram.FromArray(processedData.DataAsBytes);
@@ -565,20 +607,34 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE ECHOGRAM TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.TargetsEchogram:
                                     break;
                                 case EkSeriesDataSubscriptionType.Integration:
+                                    StructIntegrationData integrationData = StructIntegrationData.FromArray(processedData.DataAsBytes);
+                                    if (!_integrationData.Writer.TryWrite(integrationData))
+                                    {
+                                        Console.WriteLine("\"COULD NOT WRITE INTEGRATION TO CHANNEL! W00t\"");
+                                        _logger.Alert("COULD NOT WRITE INTEGRATION TO CHANNEL! W00t");
+                                    }
                                     break;
                                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                                     break;
                                 case EkSeriesDataSubscriptionType.TargetsIntegration:
+                                    TargetsIntegration integration = TargetsIntegration.FromArray(processedData.DataAsBytes);
+                                    if (!_targetsIntegration.Writer.TryWrite(integration))
+                                    {
+                                        Console.WriteLine("\"COULD NOT WRITE TS TO CHANNEL! W00t\"");
+                                        _logger.Alert("COULD NOT WRITE TS TO CHANNEL! W00t");
+                                    }
                                     break;
                                 case EkSeriesDataSubscriptionType.NoiseSpectrum:
                                     break;
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
+
                             break;
                         case "RTR": //UNDOCUMENTED :: RETRANSMISSION PACKET
                             Console.Write("Received RTR IN SUB");
@@ -617,11 +673,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
                         case "ALI":
                             AliveReport report = new AliveReport().FromArray(state.Buffer);
                             _logger.Info("Recieved ALI with the following data: " + new string(report.Info));
-                            EnqueuePacketToQueue(GenerateAliveReport(_currentActiveConnection.SequenceNumber), _currentActiveConnection.SequenceNumber);
+                            EnqueuePacketToQueue(AliveReport.GenerateAliveReport(_connectRequestResponseStruct.ClientID, _currentActiveConnection.SequenceNumber),
+                                _currentActiveConnection.SequenceNumber);
                             break;
                         case "RES": // THIS WHOLE CODE IS A MESS, MIGRATE INTO METHOD AND DO ROBUST
                             //TODO: CHeck error  codes etc
-                            EK80Response response = new EK80Response().FromArray(state.Buffer);
+                            DebugPrint("RECEIVING RESPONSE FROM EK-DEVICE");
+                            Ek80Response response = new Ek80Response().FromArray(state.Buffer);
                             XElement messageResponse = XElement.Parse(response.GetResponse().Trim('\0'));
 
                             XElement faultNode = messageResponse.Elements().FirstOrDefault(e => e.Name.LocalName == "fault");
@@ -659,7 +717,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                 case "GetParameterResponse":
                                     XElement paramValue = responseSubtree.Elements()
                                         .FirstOrDefault(e => e.Name.LocalName == "paramValue");
-
+                                    DebugPrint("RECEIVING PARAMETER RESPONSE");
                                     foreach (var packet in SentPackets)
                                     {
                                         if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
@@ -669,65 +727,94 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                                 // ALL good
                                                 switch (packet.SendableStruct.GetMethodInvocationType())
                                                 {
-                                                    case nameof(ParameterType.GetApplicationName):
+                                                    case nameof(EkSeriesParameterType.GetApplicationName):
                                                         _applicationName = paramValue?.Element("value")?.Value;
+                                                        DebugPrint("Receiving application name from EK-device:: " + _applicationName);
                                                         break;
-                                                    case nameof(ParameterType.GetApplicationType):
+                                                    case nameof(EkSeriesParameterType.GetApplicationType):
+                                                        _applicationType = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetApplicationDescription):
+                                                    case nameof(EkSeriesParameterType.GetApplicationDescription):
+                                                        _applicationDescription = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetApplicationVersion):
+                                                    case nameof(EkSeriesParameterType.GetApplicationVersion):
+                                                        _applicationVersion = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetChannelId):
+                                                    case nameof(EkSeriesParameterType.GetChannelId):
                                                         _channelID = paramValue?.Elements().FirstOrDefault(e => e.Name.LocalName == "value")?.Value;
+                                                        DebugPrint("Receiving channelId from EK-device:: " + _channelID);
                                                         break;
-                                                    case nameof(ParameterType.GetFrequency):
+                                                    case nameof(EkSeriesParameterType.GetFrequency):
+                                                        _frequency = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetPulseLength):
+                                                    case nameof(EkSeriesParameterType.GetPulseLength):
+                                                        _pulseLength = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetSampleInterval):
+                                                    case nameof(EkSeriesParameterType.GetSampleInterval):
+                                                        _sampleInterval = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.GetTransmitPower):
+                                                    case nameof(EkSeriesParameterType.GetTransmitPower):
+                                                        _transmitPower = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.AbsorptionCoefficient):
+                                                    case nameof(EkSeriesParameterType.AbsorptionCoefficient):
+                                                        _absorptionCoefficient = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.SoundVelocity):
+                                                    case nameof(EkSeriesParameterType.SoundVelocity):
+                                                        _soundVelocity = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.TransducerName):
+                                                    case nameof(EkSeriesParameterType.TransducerName):
+                                                        _transducerName = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.EquivalentBeamAngle):
+                                                    case nameof(EkSeriesParameterType.EquivalentBeamAngle):
+                                                        _equivalentBeamAngle = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.AngleSensitivityAlongship):
+                                                    case nameof(EkSeriesParameterType.AngleSensitivityAlongship):
+                                                        _angleSensitivityAlongship = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.AngleSensitivityAthwartship):
+                                                    case nameof(EkSeriesParameterType.AngleSensitivityAthwartship):
+                                                        _angleSensitivityAthwartship = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.BeamWidthAlongship):
+                                                    case nameof(EkSeriesParameterType.BeamWidthAlongship):
+                                                        _beamWidthAlongship = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.AngleOffsetAlongship):
+                                                    case nameof(EkSeriesParameterType.AngleOffsetAlongship):
+                                                        _angleOffsetAlongship = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Gain):
+                                                    case nameof(EkSeriesParameterType.Gain):
+                                                        _gain = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.SaCorrection):
+                                                    case nameof(EkSeriesParameterType.SaCorrection):
+                                                        _saCorrection = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.PingTime):
+                                                    case nameof(EkSeriesParameterType.PingTime):
+                                                        _pingTime = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Latitude):
+                                                    case nameof(EkSeriesParameterType.Latitude):
+                                                        _latitude = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Longitude):
+                                                    case nameof(EkSeriesParameterType.Longitude):
+                                                        _longitude = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Heave):
+                                                    case nameof(EkSeriesParameterType.Heave):
+                                                        _heave = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Roll):
+                                                    case nameof(EkSeriesParameterType.Roll):
+                                                        _roll = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Pitch):
+                                                    case nameof(EkSeriesParameterType.Pitch):
+                                                        _pitch = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.Distance):
+                                                    case nameof(EkSeriesParameterType.Distance):
+                                                        _distance = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.NoiseEstimate):
+                                                    case nameof(EkSeriesParameterType.NoiseEstimate):
+                                                        _noiseEstimate = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.ClientTimeoutLimit):
+                                                    case nameof(EkSeriesParameterType.ClientTimeoutLimit):
+                                                        _clientTimeoutLimit = paramValue?.Element("value")?.Value;
                                                         break;
-                                                    case nameof(ParameterType.ApplicationType):
+                                                    case nameof(EkSeriesParameterType.ApplicationType):
+                                                        _applicationType = paramValue?.Element("value")?.Value;
                                                         break;
                                                     default:
                                                         throw new ArgumentOutOfRangeException();
@@ -735,18 +822,30 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                             }
                                         }
                                     }
+
                                     break;
                                 case "SubscribeResponse":
                                     //PARSE SUBSCRIPTION ID
+                                    DebugPrint("RECEIVING SUBSCRIPTION RESPONSE");
                                     var subscriptionNode = responseSubtree.Elements().FirstOrDefault(e => e.Name.LocalName == "subscriptionID");
                                     Console.WriteLine("Receive a subscribe reponse with id: " + subscriptionNode.ToString());
+                                    foreach (var req in SubscribableRequestsInTransit)
+                                    {
+                                        if (req.Id == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
+                                        {
+                                            SubscribableRequestsInTransit.Remove(req);
+                                            break;
+                                        }
+                                    }                                   
+                                    
                                     if (_subscriptionIdToTypeMap.ContainsKey(Int64.Parse(subscriptionNode.Value)))
                                     {
                                         break;
                                     }
+                                    
                                     foreach (var packet in SentPackets.ToList()) //Need a copy of the list to avoid enumerating while the collection is being modified.
-                                    {                                           
-                                        if(packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
+                                    {
+                                        if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
                                         {
                                             if (packet.SendableStruct.GetRequestType() == "Subscription")
                                             {
@@ -786,10 +885,12 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                                     default:
                                                         throw new ArgumentOutOfRangeException();
                                                 }
+
                                                 _subscriptionIdToTypeMap.Add(Int64.Parse(subscriptionNode.Value), type);
                                             }
                                         }
                                     }
+
                                     break;
                             }
 
@@ -822,6 +923,117 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 Console.WriteLine(e.ToString());
             }
         }
+
+        public EchogramTransmissionPacket GetEchogramTransmissionPacket(int limit)
+        {
+            EchogramTransmissionPacket retval = new EchogramTransmissionPacket();
+
+            
+            
+            return retval;
+        }
+
+        public static void DebugPrint(string message)
+        {
+            #if DEBUG
+            Console.WriteLine(message);
+            #endif
+        }
+
+        #region PARAMETER_GETTERS
+
+        public string ApplicationName => _applicationName;
+
+        public string ApplicationType => _applicationType;
+
+        public string ApplicationDescription => _applicationDescription;
+
+        public string ApplicationVersion => _applicationVersion;
+
+        public string ChannelId => _channelID;
+
+        public string Frequency => _frequency;
+
+        public string PulseLength => _pulseLength;
+
+        public string SampleInterval => _sampleInterval;
+
+        public string TransmitPower => _transmitPower;
+
+        public string AbsorptionCoefficient => _absorptionCoefficient;
+
+        public string SoundVelocity => _soundVelocity;
+
+        public string TransducerName => _transducerName;
+
+        public string EquivalentBeamAngle => _equivalentBeamAngle;
+
+        public string AngleSensitivityAlongship => _angleSensitivityAlongship;
+
+        public string AngleSensitivityAthwartship => _angleSensitivityAthwartship;
+
+        public string BeamWidthAlongship => _beamWidthAlongship;
+
+        public string AngleOffsetAlongship => _angleOffsetAlongship;
+
+        public string Gain => _gain;
+
+        public string SaCorrection => _saCorrection;
+
+        public string PingTime => _pingTime;
+
+        public string Latitude => _latitude;
+
+        public string Longitude => _longitude;
+
+        public string Heave => _heave;
+
+        public string Roll => _roll;
+
+        public string Pitch => _pitch;
+
+        public string Distance => _distance;
+
+        public string NoiseEstimate => _noiseEstimate;
+
+        public string ClientTimeoutLimit => _clientTimeoutLimit;
+
+        #endregion
+
+        #region PACKET MANAGEMENT
+
+        //TODO: REMOVE ME, NOT NEEDED
+        private static void EnqueuePacketToQueue(ISendableStruct package, int SequenceNumber)
+        {
+            Ek80SendablePacketContainer container = new Ek80SendablePacketContainer {SendableStruct = package, SequenceNumber = SequenceNumber};
+            if (_sendQueue.Count >= QueueSize)
+            {
+                for (int i = 0; i < QueueSize / 2; i++)
+                {
+                    Ek80SendablePacketContainer tmp;
+                    _sendQueue.TryDequeue(out tmp);
+                }
+            }
+
+            _sendQueue.Enqueue(container);
+            EnqueueToOldPacketList(package, SequenceNumber);
+        }
+
+        private static void EnqueueToOldPacketList(ISendableStruct package, int sequenceNumber)
+        {
+            Ek80SendablePacketContainer container = new Ek80SendablePacketContainer {SendableStruct = package, SequenceNumber = sequenceNumber};
+            if (SentPackets.Count >= QueueSize)
+            {
+                for (int i = 0; i < QueueSize / 2; i++)
+                {
+                    SentPackets.RemoveAt(0);
+                }
+            }
+
+            SentPackets.Add(container);
+        }
+
+        #endregion
 
         #region GENERAL_PURPOSE_ASYNC_SOCKET_FUNCTIONALITY
 
@@ -964,13 +1176,25 @@ namespace Snapfish.EkSeriesPubsubLibrary
         public void CreateEchogramSubscription(ref Channel<Echogram> echogramSubscriptionQueue)
         {
             _echogramSubscriptionQueue = echogramSubscriptionQueue;
-            SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
+            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
         }
 
         public void CreateSampleDataSubscription(ref Channel<SampleDataContainerClass> sampleDataSubscriptionQueue)
         {
             _sampleDataSubscriptionQueue = sampleDataSubscriptionQueue;
-            SendSubscriptionRequest(Ek80RequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
+            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
+        }
+
+        public void CreateTargetsBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
+        {
+            _targetsIntegration = targetsIntegrationQueue;
+            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.TargetsIntegration);
+        }
+        
+        public void CreateBiomassSubscription(ref Channel<StructIntegrationData> IntegrationQueue)
+        {
+            _integrationData = IntegrationQueue;
+            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Integration);
         }
 
         //_sampleDataSubscriptionQueue
