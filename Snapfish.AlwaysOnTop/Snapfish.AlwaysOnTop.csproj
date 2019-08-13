@@ -86,5 +86,19 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Snapfish.Application\Snapfish.Application.csproj">
+      <Project>{5a42c2ed-7252-4c49-ad64-a2b19e015ad2}</Project>
+      <Name>Snapfish.Application</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Snapfish.BL\Snapfish.BL.csproj">
+      <Project>{25458c0f-da36-42ce-a38b-238f776b93a1}</Project>
+      <Name>Snapfish.BL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Snapfish.EkSeriesPubsubLibrary\Snapfish.EkSeriesPubsubLibrary.csproj">
+      <Project>{fe3f45be-babf-436e-825c-b7cf4487421a}</Project>
+      <Name>Snapfish.EkSeriesPubsubLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

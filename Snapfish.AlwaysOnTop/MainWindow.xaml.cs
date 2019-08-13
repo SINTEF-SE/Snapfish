@@ -4,6 +4,9 @@ using System.ComponentModel;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
+using Snapfish.Application;
+using Snapfish.BL.Models;
+using Snapfish.BL.Models.EkSeries;
 
 namespace Snapfish.AlwaysOnTop
 {
@@ -12,9 +15,14 @@ namespace Snapfish.AlwaysOnTop
     /// </summary>
     public partial class MainWindow
     {
+        public static SnapfishRecorder recorder = new SnapfishRecorder();
         public MainWindow()
         {
             InitializeComponent();
+            recorder.InstallDaemon();
+            recorder.CreateEchoSubscription();
+            recorder.CreateBiomassSub();
+            
             Left = System.Windows.SystemParameters.PrimaryScreenWidth - Width - 205;
         }
 
@@ -30,6 +38,11 @@ namespace Snapfish.AlwaysOnTop
 
         public static async Task<string> PostSnap()
         {
+            List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+            List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
+            var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
+            
+            
             string retval = "";
             using (var client = new HttpClient())
             {
@@ -44,6 +57,20 @@ namespace Snapfish.AlwaysOnTop
                 System.Console.WriteLine(retval);
             }
             return retval;
+        }
+        
+        public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<StructIntegrationData> biomasses)
+        {
+            EchogramTransmissionPacket packet = new EchogramTransmissionPacket
+            {
+                Latitude = recorder.GetLatitude(),
+                Longitude = recorder.GetLongitude(),
+                ApplicationName = recorder.GetApplicationName(),
+                ApplicationType = recorder.GetApplicationType(),
+                Echograms = echos,
+                Biomasses = biomasses
+            };
+            return packet;
         }
     }
 }

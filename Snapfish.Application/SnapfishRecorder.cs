@@ -14,7 +14,8 @@ namespace Snapfish.Application
         private const int BufferSize = 1 << 8;
         private static Channel<Echogram> _boundedBuffer;
         private static Channel<SampleDataContainerClass> _sampleDataBoundedBuffer;
-        private static Channel<TargetsIntegration> _biomassBoundedBuffer;
+        private static Channel<TargetsIntegration> _targetsBiomassBoundedBuffer;
+        public static Channel<StructIntegrationData> _biomassBoundedBuffer;
         private readonly EkSeriesSocketDaemon _daemon = new EkSeriesSocketDaemon();
 
         private string _applicationName;
@@ -40,7 +41,14 @@ namespace Snapfish.Application
                 SingleReader = false
             });
 
-            _biomassBoundedBuffer = Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions(BufferSize)
+            _targetsBiomassBoundedBuffer = Channel.CreateBounded<TargetsIntegration>(new BoundedChannelOptions(BufferSize)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleWriter = true,
+                SingleReader = false
+            });
+            
+            _biomassBoundedBuffer = Channel.CreateBounded<StructIntegrationData>(new BoundedChannelOptions(BufferSize)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleWriter = true,
@@ -57,11 +65,20 @@ namespace Snapfish.Application
             MakeDaemonFetchAttachGeoData();
         }
 
+        public void CreateEchoSubscription()
+        {
+            _daemon.CreateEchogramSubscription(ref _boundedBuffer);
+        }
+
+        public void CreateBiomassSub()
+        {
+            _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
+        }
+        
         public void AttachBufferToEchogramSubscription()
         {
             _daemon.CreateEchogramSubscription(ref _boundedBuffer);
             //_daemon.CreateSampleDataSubscription(ref _sampleDataBoundedBuffer);
-            Thread.Sleep(1500);
             _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
@@ -126,6 +143,7 @@ namespace Snapfish.Application
                 case EkSeriesDataSubscriptionType.TargetsEchogram:
                     break;
                 case EkSeriesDataSubscriptionType.Integration:
+                    retval = await Task.Run(() => ConsumeChannel(_biomassBoundedBuffer.Reader as ChannelReader<T>)).ContinueWith(task => CreateSubscribableFile(task));
                     break;
                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                     break;
@@ -152,9 +170,6 @@ namespace Snapfish.Application
         static List<T> CreateSubscribableFile<T>(Task<List<T>> task)
         {
             List<T> retval = task.Result;
-
-            
-            
             return retval;
         }
         

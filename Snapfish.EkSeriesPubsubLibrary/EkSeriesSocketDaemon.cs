@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -34,10 +33,11 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static readonly object SendLock = new object();
         private const int QueueSize = 256;
         private const int MaximumIncomingDatagrams = 1 << 8;
-        private const int MillisecondsUntilSubscribableRetransmission = 2500;
+        private const int MillisecondsUntilSubscribableRetransmission = 5000;
 
         private const int RemotePort = 37655;
         private const int ReceivePort = 8572;
+
 
         private object _responseObject;
         private EkSeriesServerInfo _remoteEkSeriesInfo;
@@ -271,37 +271,17 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         private void SendPacketsFromQueueInOrder()
         {
+            
+            
+            
             try
             {
                 if (!_isRetransmitting)
                 {
-                   /* if (SubscribableRequestsInTransit.Any())
-                    {
-                        // Might need to retransmit the subscribable request because the EK device might not response and dont care. It doesnt go into the RTR queues, so we manually need to retransmitt
-                        //Another way of doing this is chaining the multiple subscribables until one is finished, however, that would require specialized implementations and not be generic
-                        foreach (var sub in SubscribableRequestsInTransit)
-                        {
-                            if (sub.GetElapsedTimeInMilliseconds() > MillisecondsUntilSubscribableRetransmission)
-                            {
-                                DebugPrint("RETRANSMITTING REQUEST WITH RID: " + sub.Id);
-                                _logger.Info("RETRANSMITTING SUBSCRIBABLE WITH RID: " + sub.Id);
-                                var request = sub.SubscriptionRequest;
-                                Send(_currentActiveConnection.ActiveSocket, request.ToArray());
-                                SendDone.WaitOne();
-                                
-                                // HERE DO COOL STUFF
-                                _logger.Info("Retransmitted subscription request with ID: " + sub.Id);
-                                sub.ResetStopWatch();
-                            }
-                        }
-                    }*/
-                    
-                    
                     while (!_sendQueue.IsEmpty)
                     {
 
                         _sendQueue.TryPeek(out Ek80SendablePacketContainer structure);
-
                         Send(_currentActiveConnection.ActiveSocket, structure.SendableStruct.ToArray());
                         SendDone.WaitOne();
                         _logger.Info("Just sent a: " + structure.SendableStruct.GetName() + "   Packet" + " With SeqNo: " + structure.SendableStruct.GetSequenceNumber());
@@ -582,6 +562,10 @@ namespace Snapfish.EkSeriesPubsubLibrary
                         case "PRD":
                             //TODO: NEXT STEP ON DRAGON BALL Z
                             Ek80ProcessedData processedData = new Ek80ProcessedData().FromArray(state.Buffer);
+                            if (!_subscriptionIdToTypeMap.ContainsKey(processedData.SubscriptionID))
+                            {
+                                DebugPrint("Remember to remove me");
+                            }
                             EkSeriesDataSubscriptionType type = _subscriptionIdToTypeMap[processedData.SubscriptionID];
                             switch (type)
                             {
@@ -718,7 +702,15 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                     XElement paramValue = responseSubtree.Elements()
                                         .FirstOrDefault(e => e.Name.LocalName == "paramValue");
                                     DebugPrint("RECEIVING PARAMETER RESPONSE");
-                                    foreach (var packet in SentPackets)
+
+                                    List<Ek80SendablePacketContainer> SentPacketsClone = new List<Ek80SendablePacketContainer>();
+                                    foreach (var pck in SentPackets)
+                                {
+                                    var obj = new Ek80SendablePacketContainer {SendableStruct = pck.SendableStruct, SequenceNumber = pck.SequenceNumber};
+                                    SentPacketsClone.Add(obj);
+                                }
+                                    
+                                    foreach (var packet in SentPacketsClone)
                                     {
                                         if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
                                         {
@@ -834,6 +826,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         if (req.Id == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
                                         {
                                             SubscribableRequestsInTransit.Remove(req);
+                                            DebugPrint("Removed from sent subscriptions: " + req.Id);
                                             break;
                                         }
                                     }                                   
