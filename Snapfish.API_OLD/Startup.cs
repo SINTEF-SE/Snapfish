@@ -27,6 +27,9 @@ namespace Snapfish.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // needed cors for dev - remove if/when we dont need it anymore
+            services.AddCors();
+            
             services.AddDbContext<SnapContext>(opt =>
                 opt.UseInMemoryDatabase("SnapMessageDB"));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -44,6 +47,11 @@ namespace Snapfish.API
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            
+            // needed cors for dev - change/remove if/when we dont need it anymore
+            app.UseCors(
+                options => options.WithOrigins("*").AllowAnyMethod()
+            );
 
             //TODO re-add app.UseHttpsRedirection();
             app.UseMvc();

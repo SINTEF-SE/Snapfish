@@ -13,7 +13,7 @@ namespace Snapfish.BL.Models.EkSeries
 
     public struct EchogramArray
     {
-        public short[] nEchogramElement; //[30000]        
+        public short[] nEchogramElement; //[30000]
     }
 
     public struct Echogram

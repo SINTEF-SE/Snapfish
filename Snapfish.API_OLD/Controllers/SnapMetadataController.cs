@@ -2,45 +2,45 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Snapfish.API.Models;
+using Snapfish.BL.Models;
 
-namespace Snapfish.API.Controllers
+namespace Snapfish.API_OLD.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EchogramInfosController : ControllerBase
+    public class SnapMetadataController : ControllerBase
     {
 
         private readonly SnapContext _context;
 
-        public EchogramInfosController(SnapContext context)
+        public SnapMetadataController(SnapContext context)
         {
             _context = context;
-            if (_context.EchogramInfos.Count() == 0)
-            {
-                _context.EchogramInfos.Add(new EchogramInfo { Source = "EK80", Latitude = "432233", Longitude= "123456", Timestamp = DateTime.Now });
-                _context.SaveChanges();
-            }
+            
+            if (_context.SnapMetadatas.Any()) return;
+            
+            _context.SnapMetadatas.Add(new SnapMetadata { Source = "EK80", Latitude = "432233", Longitude= "123456", Timestamp = DateTime.Now });
+            _context.SaveChanges();
 
         }
 
         // GET: api/EchogramInfo
         [HttpGet]
-        public async Task<IEnumerable<EchogramInfo>> GetEchogramInfos()
+        public async Task<IEnumerable<SnapMetadata>> GetEchogramInfos()
         {
-            return await _context.EchogramInfos
-                            .Include(e => e.Owner)
+            return await _context.SnapMetadatas
+                            .Include(e => e.OwnerId)
                             .ToListAsync ();
         }
 
         // GET: api/EchogramInfo/5
         [HttpGet("{id}", Name = "Get")]
-        public async Task<ActionResult<EchogramInfo>> GetEchogramInfo(long id)
+        public async Task<ActionResult<SnapMetadata>> GetEchogramInfo(long id)
         {
-            var snap = await _context.EchogramInfos.FindAsync(id);
+            var snap = await _context.SnapMetadatas.FindAsync(id);
 
             if (snap == null)
             {
@@ -50,20 +50,21 @@ namespace Snapfish.API.Controllers
             return snap;
         }
 
-/*        // POST: api/EchogramInfo
+        // POST: api/SnapMetadata
         [HttpPost]
-        public async Task<ActionResult<EchogramInfo>> PostEchogramInfo(EchogramInfo item)
+        public async Task<ActionResult<SnapMetadata>> PostSnapMetadata([FromBody] SnapMetadata metadata)
         {
-            _context.EchogramInfos.Add(item);
+            _context.SnapMetadatas.Add(metadata);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetEchogramInfo), new { id = item.ID }, item);
+            return CreatedAtAction(nameof(GetEchogramInfo), new { id = metadata.Id }, metadata);
         }
-*/        
+/*        
         //TODO: REMOVE ME ONLY FOR DEMO, LETS DO THIS SAFELY TO ENSURE NO FUCK UPS
         [HttpPost]
         public async Task<ActionResult<int>> PostEchogramInfo(int id)
         {
+            System.Console.WriteLine("post received in echograminfoscontroller");
             EchogramInfo infoClass = new EchogramInfo();
         //    switch (id)
 //            {
@@ -76,7 +77,7 @@ namespace Snapfish.API.Controllers
                     infoClass.Timestamp = DateTime.Now;
                     infoClass.Biomass = "341";
                     infoClass.OwnerID = 2;
-    /*                break;
+                    break;
                 case 2:
                     //infoClass.ID = 16;
                     infoClass.Latitude = "632468";
@@ -95,13 +96,13 @@ namespace Snapfish.API.Controllers
                     infoClass.Timestamp = DateTime.Now;
                     infoClass.Biomass = "341";
                     break;
-            }*/
+            }
 
             _context.EchogramInfos.Add(infoClass);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetEchogramInfo), new { id = infoClass.ID }, infoClass);
         }
-        
+*/
 
         /*
         // PUT: api/EchogramInfo/5
@@ -114,14 +115,14 @@ namespace Snapfish.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEchogramInfo(long id)
         {
-            var echogramInfo = await _context.EchogramInfos.FindAsync(id);
+            var echogramInfo = await _context.SnapMetadatas.FindAsync(id);
 
             if (echogramInfo == null)
             {
                 return NotFound();
             }
 
-            _context.EchogramInfos.Remove(echogramInfo);
+            _context.SnapMetadatas.Remove(echogramInfo);
             await _context.SaveChangesAsync();
 
             return NoContent();

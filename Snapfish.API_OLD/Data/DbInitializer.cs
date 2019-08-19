@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Snapfish.BL.Models;
 
 namespace Snapfish.API.Data
 {
@@ -30,25 +31,25 @@ namespace Snapfish.API.Data
             context.SaveChanges();
 
 
-            var echograms = new EchogramInfo[]
+            var echograms = new SnapMetadata[]
             {
-                new EchogramInfo{OwnerID=users[0].ID, Latitude="632448", Longitude="102433", Source="EK80", EchogramUrl="https://www.sintef.no", Timestamp=DateTime.Parse("2019-05-12 08:01+0100"), Biomass=""},
-                new EchogramInfo{OwnerID=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", EchogramUrl="https://10.218.87.81:5006/test/index.html", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""}
-//                new EchogramInfo{OwnerID=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", EchogramUrl="https://www.dagbladet.no", Timestamp=DateTime.Parse("2019-05-12 09:26+0100"), Biomass=""},
-//                new EchogramInfo{OwnerID=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", EchogramUrl="https://www.adressa.no", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""},
-//                new EchogramInfo{OwnerID=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", EchogramUrl="https://www.aftenposten.no", Timestamp=DateTime.Parse("2019-05-13 09:26+0100"), Biomass=""}
+                new SnapMetadata{OwnerId=users[0].ID, Latitude="632448", Longitude="102433", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 08:01+0100"), Biomass=""},
+                new SnapMetadata{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""}
+//                new EchogramInfo{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:26+0100"), Biomass=""},
+//                new EchogramInfo{OwnerId=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""},
+//                new EchogramInfo{OwnerId=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-13 09:26+0100"), Biomass=""}
             };
-            foreach (EchogramInfo e in echograms)
+            foreach (SnapMetadata e in echograms)
             {
-                context.EchogramInfos.Add(e);
+                context.SnapMetadatas.Add(e);
             }
             context.SaveChanges();
 
 
             var snaps = new SnapMessage[]
             {
-                new SnapMessage{EchogramInfoID = echograms[0].ID, Title="Mye fisk her", Comment="Vi har ikke plass til mer", SenderID=users[0].ID, SenderEmail=users[0].Email, SendTimestamp=DateTime.Parse("2019-05-12 08:04+0100"), SharePublicly=false},
-                new SnapMessage{EchogramInfoID = echograms[1].ID, Title="Torsk", Comment="Her blir det fangst!", SenderID=users[2].ID, SenderEmail=users[2].Email, SendTimestamp=DateTime.Parse("2019-05-12 09:32+0100"), SharePublicly=true}
+                new SnapMessage{EchogramInfoID = echograms[0].Id, Title="Mye fisk her", Comment="Vi har ikke plass til mer", SenderID=users[0].ID, SenderEmail=users[0].Email, SendTimestamp=DateTime.Parse("2019-05-12 08:04+0100"), SharePublicly=false},
+                new SnapMessage{EchogramInfoID = echograms[1].Id, Title="Torsk", Comment="Her blir det fangst!", SenderID=users[2].ID, SenderEmail=users[2].Email, SendTimestamp=DateTime.Parse("2019-05-12 09:32+0100"), SharePublicly=true}
             };
             foreach (SnapMessage s in snaps)
             {

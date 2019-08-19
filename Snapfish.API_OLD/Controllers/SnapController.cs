@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
+using Newtonsoft.Json;
 using Snapfish.API.Models;
 using Snapfish.BL.Models;
 
@@ -12,28 +14,51 @@ namespace Snapfish.API.Controllers
     {
         private readonly SnapContext _context;
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EchogramTransmissionPacket>> GetEchogramData(long id)
+        public SnapController(SnapContext context)
         {
-            var snap = await _context.EchogramTransmissionPackets.FindAsync(id);
+            _context = context;
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<string>> GetSnap(long id)
+        {
+            var snap = await _context.Snaps.FindAsync(id);
             if (snap == null)
             {
                 return NotFound();
             }
 
-            return snap; 
+            return snap.SnapPacketJson;
         }
-
         
         [HttpPost]
-        public async Task<ActionResult<EchogramTransmissionPacket>> PostEchogramInfo(EchogramTransmissionPacket id)
+        public async Task<ActionResult<string>> PostSnap([FromBody] SnapPacket snapPacket)
         {
-            EchogramTransmissionPacket infoClass = new EchogramTransmissionPacket();
 
-            _context.EchogramTransmissionPackets.Add(infoClass);
-            await _context.SaveChangesAsync();
+            // TODO: - Handle Id generation, add biomass and add source
             
-            return CreatedAtAction(nameof(GetEchogramData), new { id = infoClass.Id }, infoClass);
+            const long id = 123;
+            
+            var metadata = new SnapMetadata
+            {
+                Id = id,
+                OwnerId = snapPacket.OwnerId,
+                Timestamp = snapPacket.Timestamp,
+                Latitude = snapPacket.Latitude,
+                Longitude = snapPacket.Longitude
+            };
+
+            var snap = new Snap
+            {
+                Id = id,
+                SnapPacketJson = JsonConvert.SerializeObject(snapPacket)
+            };
+
+            _context.SnapMetadatas.AddAsync(metadata);
+            _context.Snaps.AddAsync(snap);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetSnap), new { id = id }, snapPacket);
         }
     }
 }
