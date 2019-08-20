@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>netcoreapp2.2</TargetFramework>
@@ -20,6 +20,25 @@
     <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\test\data\backscatter.csv" />
       <_ContentIncludedByDefault Remove="wwwroot\test\data\data.csv" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\backscatter.csv" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\chroma.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\data.csv" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\data.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\index.html" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\libs\chroma.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\libs\crossfilter.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\libs\nouislider.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\libs\nouislider.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\libs\papaparse.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\main.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\papaparse.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\plot.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\plot.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\shaders.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\time-control.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\test\src\webgl-utils.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\libs\nouislider.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\js\libs\nouislider.min.js" />
     </ItemGroup>
 
 </Project>

@@ -93,8 +93,7 @@ namespace Snapfish.Console
 
                 var result = await client.PostAsync("http://localhost:5000/api/Snap/", stringContent);
                 // var resultContent = await result.Content.ReadAsStringAsync();
-                // System.Console.WriteLine(resultContent);
-                System.Console.WriteLine("Response code from API: " + result.StatusCode);
+                System.Console.WriteLine("Snap posted to API. Response code from API: " + result.StatusCode);
             }
         }
     }

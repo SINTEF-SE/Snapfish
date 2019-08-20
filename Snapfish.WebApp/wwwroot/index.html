@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>SV Plot :: WebGL</title>
+    <link rel="stylesheet" type="text/css" href="/src/libs/nouislider.min.css" />
+    <link rel="stylesheet" type="text/css" href="/src/plot.css" />
+    <style>
+        body {
+            background-color: #edede5;
+            margin: 0;
+            padding: 0;
+        }
+
+        #plots-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="plots-container">
+        <div id="backscatter-plot" class="plot"></div>
+    </div>
+    
+    <script src="/src/libs/nouislider.min.js"></script>
+
+    <script src="/src/shaders.js"></script>
+    <script src="/src/WebGLUtil.js"></script>
+    <script src="/src/DataContainer.js"></script>
+    <script src="/src/Plot.js"></script>
+
+    <script src="main.js"></script>
+</body>
+</html>
