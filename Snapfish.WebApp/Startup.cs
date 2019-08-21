@@ -67,7 +67,10 @@ namespace Snapfish.WebApp
 
             app.UseAuthentication();
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute("snap", "{controller=snap}/{action=id}/{id}");
+            });
         }
     }
 }

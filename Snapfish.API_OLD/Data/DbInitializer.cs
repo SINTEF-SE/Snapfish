@@ -35,9 +35,6 @@ namespace Snapfish.API.Data
             {
                 new SnapMetadata{OwnerId=users[0].ID, Latitude="632448", Longitude="102433", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 08:01+0100"), Biomass=""},
                 new SnapMetadata{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""}
-//                new EchogramInfo{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:26+0100"), Biomass=""},
-//                new EchogramInfo{OwnerId=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass=""},
-//                new EchogramInfo{OwnerId=users[1].ID, Latitude="642451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-13 09:26+0100"), Biomass=""}
             };
             foreach (SnapMetadata e in echograms)
             {

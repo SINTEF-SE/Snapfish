@@ -34,31 +34,26 @@ namespace Snapfish.API.Controllers
         [HttpPost]
         public async Task<ActionResult<string>> PostSnap([FromBody] SnapPacket snapPacket)
         {
+            var snap = new Snap
+            {
+                SnapPacketJson = JsonConvert.SerializeObject(snapPacket)
+            };
+            
+            _context.Snaps.Add(snap);
 
-            // TODO: - Handle Id generation, add biomass and add source
-            
-            const long id = 123;
-            
             var metadata = new SnapMetadata
             {
-                Id = id,
+                SnapId = snap.Id,
                 OwnerId = snapPacket.OwnerId,
                 Timestamp = snapPacket.Timestamp,
                 Latitude = snapPacket.Latitude,
                 Longitude = snapPacket.Longitude
             };
 
-            var snap = new Snap
-            {
-                Id = id,
-                SnapPacketJson = JsonConvert.SerializeObject(snapPacket)
-            };
-
             _context.SnapMetadatas.AddAsync(metadata);
-            _context.Snaps.AddAsync(snap);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSnap), new { id = id }, snapPacket);
+            return CreatedAtAction(nameof(GetSnap), new { id = snap.Id }, snapPacket);
         }
     }
 }
