@@ -32,7 +32,7 @@ namespace Snapfish.API_OLD.Controllers
         public async Task<IEnumerable<SnapMetadata>> GetEchogramInfos()
         {
             return await _context.SnapMetadatas
-                            .Include(e => e.OwnerId)
+                            //TODO: Check   .Include(e => e.OwnerId)
                             .ToListAsync ();
         }
 

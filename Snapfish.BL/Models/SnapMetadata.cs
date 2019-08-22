@@ -1,11 +1,9 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace Snapfish.BL.Models
 {
     public class SnapMetadata
     {
-        [Key]
         public long Id { get; set; }
 
         public long SnapId { get; set; }
