@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Newtonsoft.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using Snapfish.Application;
 using Snapfish.BL.Models;
 using Snapfish.BL.Models.EkSeries;
+
+using System.Linq;
+using System.Text;
 
 namespace Snapfish.AlwaysOnTop
 {
@@ -39,10 +43,13 @@ namespace Snapfish.AlwaysOnTop
         public static async Task<string> PostSnap()
         {
             List<Echogram> echos = recorder.CreateEchogramFileData().Result;
-            List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
-            var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
-            
-            
+            ///List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
+            //var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
+
+            var packet = CreateSnapPacket(recorder, echos);
+            UploadSnap(packet);
+
+
             string retval = "";
             using (var client = new HttpClient())
             {
@@ -58,19 +65,88 @@ namespace Snapfish.AlwaysOnTop
             }
             return retval;
         }
-        
-        public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<StructIntegrationData> biomasses)
+
+        private static SnapPacket CreateSnapPacket(SnapfishRecorder recorder, List<Echogram> echograms)
         {
-            EchogramTransmissionPacket packet = new EchogramTransmissionPacket
+            var slices = new Slice[echograms.Count];
+            foreach (var i in Enumerable.Range(0, echograms.Count))
             {
+                slices[i] = new Slice
+                {
+                    Data = echograms[i].EchogramArray.nEchogramElement,
+                    DataLength = echograms[i].EchogramArray.nEchogramElement.Length,
+                    Range = echograms[i].EchogramHeader.range,
+                    RangeStart = echograms[i].EchogramHeader.rangeStart,
+                    Timestamp = echograms[i].EchogramHeader.dlTime
+                };
+            }
+
+            return new SnapPacket
+            {
+                OwnerId = 212, // TODO: Handle OwnerId when posting new Snap
+                Timestamp = DateTime.Now,
                 Latitude = recorder.GetLatitude(),
                 Longitude = recorder.GetLongitude(),
-                ApplicationName = recorder.GetApplicationName(),
-                ApplicationType = recorder.GetApplicationType(),
-                Echograms = echos,
-                Biomasses = biomasses
+                Slices = slices,
+                NumberOfSlices = slices.Length,
+                SliceHeight = slices[0].DataLength
             };
-            return packet;
         }
+
+        public static async void UploadSnap(SnapPacket packet)
+        {
+            using (var client = new HttpClient())
+            {
+                var json = JsonConvert.SerializeObject(packet);
+                var stringContent = new StringContent(json, UnicodeEncoding.UTF8, "application/json");
+
+                var result = await client.PostAsync("http://localhost:5000/api/Snap/", stringContent);
+                // var resultContent = await result.Content.ReadAsStringAsync();
+                System.Console.WriteLine("Snap posted to API. Response code from API: " + result.StatusCode);
+            }
+        }
+
+
+
+        /*      public static async Task<string> PostSnap()
+              {
+                  List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+                  List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
+                  var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
+
+
+                  string retval = "";
+                  using (var client = new HttpClient())
+                  {
+                      var postTableContent = new FormUrlEncodedContent(new[]
+                      {
+                          new KeyValuePair<string, string>("id", "1"),
+                      });
+
+                      var result = await client.PostAsync("http://10.218.69.76:5002/api/EchogramInfos/", postTableContent);
+                      string resultContent = await result.Content.ReadAsStringAsync();
+                      retval = resultContent;
+                      System.Console.WriteLine(retval);
+                  }
+                  return retval;
+              }
+      */
+
+
+        /*
+                public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<StructIntegrationData> biomasses)
+                {
+                    EchogramTransmissionPacket packet = new EchogramTransmissionPacket
+                    {
+                        Latitude = recorder.GetLatitude(),
+                        Longitude = recorder.GetLongitude(),
+                        ApplicationName = recorder.GetApplicationName(),
+                        ApplicationType = recorder.GetApplicationType(),
+                        Echograms = echos,
+                        Biomasses = biomasses
+                    };
+                    return packet;
+                }
+                */
     }
 }
