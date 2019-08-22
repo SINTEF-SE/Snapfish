@@ -39,7 +39,6 @@ namespace Snapfish.Console
                 {
                     List<Echogram> echos = recorder.CreateEchogramFileData().Result;
                     List<SampleDataContainerClass> sampleData = recorder.CreateSubscribableFileData<SampleDataContainerClass>(EkSeriesDataSubscriptionType.SampleData).Result;
-                    //CreateTransmissableDataPacket(recorder, echos, sampleData);
                 }
                 else if (key.StartsWith("e"))
                 {

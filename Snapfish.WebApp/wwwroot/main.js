@@ -1,4 +1,4 @@
-const dataContainer = new DataContainer('http://localhost:5000/api/Snap/123');
+const dataContainer = new DataContainer('http://localhost:5000/api/Snap/' + snapId);
 
 const svPlot = new Plot({
     domId: 'backscatter-plot',
