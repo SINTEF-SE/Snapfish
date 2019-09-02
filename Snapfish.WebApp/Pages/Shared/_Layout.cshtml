@@ -1,50 +1,34 @@
-﻿<!DOCTYPE html>
+﻿<!DOCTYPE HTML>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
     <title>@ViewData["Title"]</title>
 
-    <link rel="stylesheet" href="~/src/libs/nouislider.min.css" />
     <link rel="stylesheet" href="~/src/plot.css" />
-    
     <style>
         body {
-            background-color: #edede5;
+            background-color: #ddd;;
             margin: 0;
             padding: 0;
         }
-
-        #plots-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
     </style>
-    
 </head>
 <body>
+@RenderBody()
 
-    @RenderBody()
+<script>
+    const snapId = @ViewData["SnapId"];
+</script>
+<div id="snap" class="echogram"></div>
 
-    <script>
-        const snapId = @ViewData["SnapId"];
-    </script>
-    
-    <!-- external libs -->
-        <script src="~/src/libs/nouislider.min.js"></script>
-    
-    <!-- Echoviewer Source Files -->
-    <script src="~/src/shaders.js"></script>
-    <script src="~/src/WebGLUtil.js"></script>
-    <script src="~/src/DataContainer.js"></script>
-    <script src="~/src/Plot.js"></script>
-    
-    <!-- Echoviwer setup file -->
-    <script src="~/main.js"></script>
+<script src="/src/libs/easypz.min.js"></script>
 
-    @RenderSection("Scripts", required: false)
+<script src="/src/shaders.js"></script>
+<script src="/src/WebGLUtil.js"></script>
+<script src="/src/DataContainer.js"></script>
+<script src="/src/plot.js"></script>
+
+<script src="~/main.js"></script>
+@RenderSection("Scripts", required: false)
 </body>
 </html>

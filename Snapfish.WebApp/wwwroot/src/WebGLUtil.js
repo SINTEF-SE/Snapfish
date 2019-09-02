@@ -32,10 +32,10 @@ class WebGLUtil {
         return squareBuffer;
     }
 
-    static createDataTexture(gl, data, filteredRange, interpolated) {
+    static createDataTexture(gl, data, interpolated) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const imageData = WebGLUtil.createImageData(ctx, data, filteredRange);
+        const imageData = WebGLUtil.createImageData(ctx, data);
 
         const filter = interpolated ? gl.LINEAR : gl.NEAREST;
         const texture = gl.createTexture();
@@ -51,28 +51,21 @@ class WebGLUtil {
         return texture;
     }
 
-    static createImageData(ctx, data, filteredRange) {
+    static createImageData(ctx, data) {
         const width = data.NumberOfSlices;
         const height = data.SliceHeight;
-
         const imageData = ctx.createImageData(width, height);
-
-        const min = filteredRange[0];
-        const max = filteredRange[1];
 
         let colorIndex = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                // TODO: Use more than 1 byte for color resolution
-                const value = data.Slices[x].Data[height - y];
-                imageData.data[colorIndex] = Math.floor(255 * (value - min) / (max - min));
-                imageData.data[colorIndex + 1] = 0;
-                imageData.data[colorIndex + 2] = 0;
-                if (value < min || value > max)
-                    imageData.data[colorIndex + 3] = 0;
-                else
-                    imageData.data[colorIndex + 3] = 255;
-                    colorIndex += 4;
+                const value = Math.abs(data.Slices[x].Data[height - y]);
+                const sign = Math.sign(data.Slices[x].Data[height - y]);
+                imageData.data[colorIndex]     = sign == 1 ? 255 : 0;
+                imageData.data[colorIndex + 1] = (value >> 16) & 0xFF;
+                imageData.data[colorIndex + 2] = (value >> 8) & 0xFF;
+                imageData.data[colorIndex + 3] = value & 0xFF;
+                colorIndex += 4;
             }
         }
 

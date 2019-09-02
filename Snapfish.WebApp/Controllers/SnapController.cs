@@ -5,7 +5,7 @@ namespace Snapfish.WebApp.Controllers
 {
     public class SnapController : Controller
     {
-        [Route("/snap/id/{id}")]
+        [Route("/snap/{id}")]
         public IActionResult Snap(int id)
         {
             System.Console.WriteLine(id);

@@ -1,29 +1,8 @@
-.plot {
-    width: 680px;
-    height: 420px;
-    padding: 0 5.6rem 265px 0.4rem;
-    margin: 1.5% 12px 2px;  /* demo hack */
-    resize: both;
-    overflow: hidden;
-    background-color: #fff;
-    border: 1px solid silver;
-    box-shadow: 1px 1px 6px silver;
+#snap {
+    width: 100%;
+    max-width: 425px;
+    margin: 0 auto;
     font-family: sans-serif;
-}
-
-.plot-title {
-    width: 100%;
-    padding: 1.75rem 0 0 2.8rem;
-    font-size: 1.2rem;
-    text-align: center;
-}
-
-.plot-time {
-    width: 100%;
-    padding: 0.2rem 0 1rem 2.8rem;
-    font-size: 0.82rem;
-    color: #454545;
-    text-align: center;
 }
 
 .gl-plot-canvas {
@@ -32,7 +11,28 @@
 
 .chart-row {
     width: 100%;
+    height: 500px; /* FIX */
     display: flex;
+}
+
+.canvas-splitter {
+    width: 1px;
+    background-color: #888;
+    border: 1px solid #000;;
+}
+
+.canvas-div{
+    width: 100%;
+    height: 100%;
+    background: #fff;
+}
+
+.latest-slice-col {
+    flex-grow: 1;
+}
+
+.latest-slice-col .canvas-div{
+    /*background: #bec4cc;*/
 }
 
 .x-labels {
@@ -42,24 +42,12 @@
 }
 
 .y-axis {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.y-labels {
-    width: 2.8rem;
-    height: 100%;
-    text-align: right;
-    flex-grow: 1;
+    position: absolute;
+    height: 500px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-}
-
-.y-axis-spacer {
-    height: 1.2rem;
+    text-shadow: 1px 1px #fff; 
 }
 
 .slider-row {
@@ -74,19 +62,15 @@
 
 .interpolation-row {
     width: 100%;
-    padding: .5rem 0 0 2.8rem;
-    display: flex;
 }
 
-.color-scale-row, .filter-row {
-    width: 100%;
-    padding-top: .5rem;
-    margin-left: 2.8rem;
+.color-scale-row {
+    margin: 4px;
 }
 
 .color-scale-canvas {
     width: 100%;
-    height: 20px;
+    height: 16px;
 }
 
 .color-scale-labels {
@@ -95,31 +79,38 @@
     justify-content: space-between;
 }
 
-.time-control {
-    width: 450px;
-    height: 1.8rem;
-    margin: 1.5% 12px 2px;  /* demo hack */
-    padding: 1rem;
-    overflow: hidden;
-    background-color: #fff;
-    border: 1px solid silver;
-    box-shadow: 1px 1px 6px silver;
-    font-family: sans-serif;
+.filter-row {
+    height: 2.5rem;
+    margin: 4px;
+    display: flex;
 }
 
-.time-control .slider-row {
-    padding: 0px;
+.filter-minus, .filter-plus {
+    flex-grow: 2;
+    cursor: pointer;
+    border: 1px solid #888;
+    background-image: linear-gradient(#eee, #cdcdcd);
+}
+.filter-minus:hover, .filter-plus:hover {
+    background-image: linear-gradient(#cdcdcd, #eee);
 }
 
-/* Filter Slider */
-
-.noUi-tooltip {
-    display: none;
-}
-.noUi-active .noUi-tooltip {
-    display: block;
+.filter-minus {
+    border-radius: 3px 0 0 3px;
 }
 
-.noUi-connect {
-    background: #bec4cc;
+.filter-plus {
+    border-radius: 0 3px 3px 0;
+}
+
+.filter-slider {
+    flex-grow: 4;
+    border-top: 1px solid #888;
+    border-bottom: 1px solid #888;
+    background-image: linear-gradient(#eee, #cdcdcd);
+}
+
+.filter-slider input {
+    width: 90%;
+    margin: 5px auto;
 }

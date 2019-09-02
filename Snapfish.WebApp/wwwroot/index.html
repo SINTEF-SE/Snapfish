@@ -2,31 +2,21 @@
 <html>
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SV Plot :: WebGL</title>
-    <link rel="stylesheet" type="text/css" href="/src/libs/nouislider.min.css" />
     <link rel="stylesheet" type="text/css" href="/src/plot.css" />
     <style>
         body {
-            background-color: #edede5;
+            background-color: #ddd;;
             margin: 0;
             padding: 0;
-        }
-
-        #plots-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
         }
     </style>
 </head>
 <body>
-    <div id="plots-container">
-        <div id="backscatter-plot" class="plot"></div>
-    </div>
-    
-    <script src="/src/libs/nouislider.min.js"></script>
+    <div id="snap" class="echogram"></div>
+
+    <script src="https://code.easypz.io/easypz.latest.js"></script>
 
     <script src="/src/shaders.js"></script>
     <script src="/src/WebGLUtil.js"></script>

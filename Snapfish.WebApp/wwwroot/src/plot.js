@@ -9,6 +9,11 @@ class Plot {
         this.zoomLevel = 1;
         this.viewportOffset = 0;
         this.mouseDown = false;
+
+        this.translateY = 0;
+        this.translateX = 0;
+        this.xOffset = 0;
+
         this.ready = new Promise((resolve) => {
             resolve(this.initialize());
         });
@@ -18,8 +23,10 @@ class Plot {
         this.data = await this.dataContainer.getDataContainer();
 
         this.canvasSetup();
+        this.canvas2Setup();
         this.containerSetup();
         await this.webglSetup();
+        this.pzSetup();
         this.draw();
         return true;
     }
@@ -28,7 +35,10 @@ class Plot {
         this.canvas = document.createElement('canvas');
         this.canvas.className = 'gl-plot-canvas';
         this.canvas.id = this.canvasId;
+        this.canvas.width = this.data.NumberOfSlices;
+        this.canvas.height = this.data.SliceHeight;
         
+        /*
         this.canvas.onmousedown = (e) => {
             this.canvas.style.cursor = 'grabbing';
             this.mouseDown = true;
@@ -40,20 +50,25 @@ class Plot {
         });
         window.addEventListener('mousemove', (e) => this.handlePan(e));
         window.addEventListener('wheel', (e) => this.handleZoom(e));
+        */
+    }
+
+    canvas2Setup() {
+        this.canvas2 = document.createElement('canvas');
+        this.canvas2.className = 'gl-plot-canvas-2';
+        this.canvas2.id = this.canvasId + '-2';
+        this.canvas2.width = 80;
+        this.canvas2.height = this.data.SliceHeight;
     }
 
     containerSetup() {
         this.addBaseHtml();
-
-        // todo: move styling somewhere else
-        this.container.style.width = '340px';
-        this.container.style.height = '410px';
         this.container.querySelector('.canvas-div').appendChild(this.canvas);
+        this.container.querySelector('.canvas-2-div').appendChild(this.canvas2);
 
-        this.setTitle();
         this.setYAxis();
         // this.setXAxis();
-        this.addInterpolationToggle();
+        // this.addInterpolationToggle();
         this.addRangeSlider();
         this.setColorScale();
 
@@ -80,9 +95,51 @@ class Plot {
 
         this.colorScale = await WebGLUtil.createDefaultColorScaleTexture(gl);
 
-        this.dataTexture = WebGLUtil.createDataTexture(gl, this.data, this.slider.noUiSlider.get(), this.interpolated);
+        this.dataTexture = WebGLUtil.createDataTexture(gl, this.data, this.interpolated);
         this.program = program;
         this.gl = gl;
+
+        await this.webgl2Setup();
+    }
+
+    async webgl2Setup() {
+        const gl = this.canvas2.getContext('webgl');
+
+        if (gl === null)
+            console.log("Unable to initialize WebGL");
+    
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    
+        const program = WebGLUtil.createShaderProgram(gl, vertexShaderText2, fragmentShaderText2);
+        gl.useProgram(program);
+
+        const aPosLocation = gl.getAttribLocation(program, 'pos');
+        gl.bindBuffer(gl.ARRAY_BUFFER, WebGLUtil.createSquareBuffer(gl));
+        gl.vertexAttribPointer(aPosLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(aPosLocation);
+
+        this.colorScale2 = await WebGLUtil.createDefaultColorScaleTexture(gl);
+        this.dataTexture2 = WebGLUtil.createDataTexture(gl, this.data, this.interpolated);
+        this.program2 = program;
+        this.gl2 = gl;
+    }
+
+    pzSetup() {
+        new EasyPZ(document.getElementById(this.canvasId), transform => {
+            if(this.zoomLevel == transform.scale) {
+                this.xOffset -= this.translateX - transform.translateX;
+                this.xOffset = Math.min(this.xOffset, this.data.NumberOfSlices);
+                this.xOffset = Math.max(this.xOffset, 0);
+            }
+            this.viewportOffset += this.translateY - transform.translateY;
+            this.zoomLevel = transform.scale;
+
+            this.draw();
+            
+            this.translateY = transform.translateY;
+            this.translateX = transform.translateX;
+        }, { minScale: 1.0, maxScale: 8.0, bounds: { top: NaN, right: NaN, bottom: NaN, left: NaN } });
     }
 
     draw(throttle) {
@@ -92,10 +149,8 @@ class Plot {
         const gl = this.gl;
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const width = parseFloat(this.container.style.width);
-        const height = parseFloat(this.container.style.height);
-        this.canvas.width = width;
-        this.canvas.height = height;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
         this.checkViewportBounds();
         gl.viewport(0, this.viewportOffset, width, height * this.zoomLevel);
 
@@ -110,12 +165,51 @@ class Plot {
         gl.bindTexture(this.gl.TEXTURE_2D, this.colorScale);
         gl.uniform1i(uColorScaleLocation, 1);
 
+        const uThresholdLocation = gl.getUniformLocation(this.program, 'threshold');
+        gl.uniform1f(uThresholdLocation, parseFloat(this.slider.value));
+        const uMaxLocation = gl.getUniformLocation(this.program, 'max');
+        gl.uniform1f(uMaxLocation, -1000);
+        const uXOffsetLocation = gl.getUniformLocation(this.program, 'xOffset');
+        gl.uniform1f(uXOffsetLocation, (this.xOffset / this.data.NumberOfSlices));
+
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         this.updateYLabels();
 
+        this.draw2();
+
         if (throttle)
             this.preDraw = Date.now();
+    }
+
+    draw2() {
+        const gl = this.gl2;
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        const width = this.canvas2.width;
+        const height = this.canvas2.height;
+        this.checkViewportBounds();
+        gl.viewport(0, this.viewportOffset, width, height * this.zoomLevel);
+
+        const texture = this.dataTexture2;
+        const uDataLocation = gl.getUniformLocation(this.program2, 'data');
+        gl.uniform1i(uDataLocation, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        const uColorScaleLocation = gl.getUniformLocation(this.program2, 'colorScale');
+        gl.activeTexture(this.gl.TEXTURE0 + 1);
+        gl.bindTexture(this.gl.TEXTURE_2D, this.colorScale2);
+        gl.uniform1i(uColorScaleLocation, 1);
+
+        const uThresholdLocation = gl.getUniformLocation(this.program2, 'threshold');
+        gl.uniform1f(uThresholdLocation, parseFloat(this.slider.value));
+        const uMaxLocation = gl.getUniformLocation(this.program2, 'max');
+        gl.uniform1f(uMaxLocation, -1000);
+        const uXOffsetLocation = gl.getUniformLocation(this.program2, 'xOffset');
+        gl.uniform1f(uXOffsetLocation, (this.xOffset / this.data.NumberOfSlices));
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
     // todo: cleanup
@@ -165,10 +259,10 @@ class Plot {
         const offsetRatio = Math.abs(viewport[1]) / viewport[3];
         const top = dataHeight - diffRatio * dataHeight + dataHeight * offsetRatio;
         const bottom = top - (dataHeight - dataHeight * diffRatio);
-        const labels = this.container.querySelector('.y-labels').children;
+        const labels = this.container.querySelector('.y-axis').children;
         const range = top - bottom;
         for (let i = 1; i < labels.length - 1; i++) {
-            labels[i].innerHTML = dataHeight - Math.round((range / 5) * (5-i) + bottom);
+            labels[i].innerHTML = dataHeight - Math.round((range / 5) * (5-i) + bottom) + "m";
         }
     }
 
@@ -186,23 +280,12 @@ class Plot {
     }
 
     setYAxis() {
-        const labels = document.createElement('div');
-        const spacer = document.createElement('div');
-        const axis = this.container.querySelector('.y-axis');
+        const labels = this.container.querySelector('.y-axis');
 
         for (let i = 5; i > -1; i--) {
             const label = document.createElement('div');
             labels.appendChild(label);
         }
-        
-        spacer.className = 'y-axis-spacer';
-        labels.className  = 'y-labels';
-        axis.appendChild(labels);
-        axis.appendChild(spacer);
-    }
-
-    setTitle() {
-        this.container.querySelector('.plot-title').innerHTML = this.title;
     }
 
     setColorScale() {
@@ -214,7 +297,7 @@ class Plot {
         colorScale.height = height;
 
         container.insertBefore(colorScale, container.firstChild);
-        const filterRange = this.slider.noUiSlider.get();
+        const filterRange = [this.slider.value, this.slider.max];
         this.setColorScaleLabels(filterRange[0], filterRange[1]);
     }
 
@@ -229,24 +312,18 @@ class Plot {
     }
 
     addRangeSlider() {
-        const slider = this.container.querySelector('.filter-slider');
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = -9500;
+        slider.max = -1000;
+        slider.value = slider.min;
 
-        // TODO: Get proper power level thresholding and min/max values from actual data
-        const min = -9500;
-        const max = -1000;
+        slider.oninput = () => {
+            this.draw();
+            this.setColorScaleLabels(slider.value, slider.max);
+        };
 
-        noUiSlider.create(slider, {
-            start: [min, max],
-            tooltips: [true, true],
-            connect: true,
-            range: {
-                'min': min,
-                'max': max
-            }
-        });
-
-        slider.noUiSlider.on('set', (range) => this.filterValues(range));
-
+        this.container.querySelector('.filter-slider').appendChild(slider);
         this.slider = slider;
     }
 
@@ -254,48 +331,39 @@ class Plot {
         const container = this.container.querySelector('.interpolated-toggle');
         const toggle = document.createElement('input');
         toggle.type = 'checkbox';
-        toggle.onchange = (e) => this.setInterpolated(e.target.value, true);
+        toggle.onchange = () => this.setInterpolated(toggle.checked);
         container.appendChild(toggle);
         container.appendChild(document.createTextNode('Interpolated'));
     }
 
     setInterpolated(interpolated) {
-        const filterRange = this.slider.noUiSlider.get();
-        this.interpolated = !this.interpolated;  // TODO: FIX!
-
-        this.dataTexture = WebGLUtil.createDataTexture(this.gl, this.data, filterRange, this.interpolated);
-
+        this.interpolated = interpolated;
+        this.dataTexture = WebGLUtil.createDataTexture(this.gl, this.data, this.interpolated);
         this.draw();
-    }
-
-    filterValues() {
-        const filterRange = this.slider.noUiSlider.get();
-        this.dataTexture = WebGLUtil.createDataTexture(this.gl, this.data, filterRange, this.interpolated);
-        this.draw();
-        this.setColorScaleLabels(filterRange[0], filterRange[1]);
     }
 
     addBaseHtml() {
         this.container.innerHTML = `
-            <div class='plot-title'></div>
-            <div class='plot-time'></div>
             <div class='chart-row'>
-                <div class='y-axis'></div>
-                <div class='canvas-col'>
+                
+                <div class='echogram-col'>
+                    <div class='y-axis'></div>
                     <div class='canvas-div'></div>
                     <div class='x-axis'></div>
                 </div>
-            </div>
-            <div class='slider-row'>
-                <div class='play-button-col'></div>
-                <div class='slider-col'></div>
+                <div class="canvas-splitter"></div>
+                <div class='latest-slice-col'>
+                    <div class='canvas-div canvas-2-div'></div>
+                </div>
             </div>
             <div class='interpolation-row'>
-                <div class="split-dropdown"></div>
                 <label class='interpolated-toggle'></label>
             </div>
+            <div class="biomass-row"></div>
             <div class='filter-row'>
+                <div class="filter-minus"></div>
                 <div class="filter-slider"></div>
+                <div class="filter-plus"></div>
             </div>
             <div class='color-scale-row'>
                 <div class='color-scale'>
