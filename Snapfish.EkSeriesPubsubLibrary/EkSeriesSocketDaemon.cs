@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
     public class EkSeriesSocketDaemon
     {
         //private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("192.168.1.247");
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.157.50");
+        private static readonly IPAddress Ek80Endpoint = GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
@@ -139,6 +140,24 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static Channel<TargetsIntegration> _targetsIntegration = null;
         private static Channel<StructIntegrationData> _integrationData = null;
         
+        public static IPAddress GetDefaultEk80Endpoint()
+        {
+            var firstUpInterface = NetworkInterface.GetAllNetworkInterfaces()
+                .OrderByDescending(c => c.Speed)
+                .FirstOrDefault(c => c.NetworkInterfaceType != NetworkInterfaceType.Loopback && c.OperationalStatus == OperationalStatus.Up);
+            if (firstUpInterface != null)
+            {
+                var props = firstUpInterface.GetIPProperties();
+                // get first IPV4 address assigned to this interface
+                var firstIpV4Address = props.UnicastAddresses
+                    .Where(c => c.Address.AddressFamily == AddressFamily.InterNetwork)
+                    .Select(c => c.Address)
+                    .FirstOrDefault();
+                return firstIpV4Address;
+            }
+            return null;
+        }
+
         public EkSeriesSocketDaemon()
         {
             InitializeLogger();
@@ -192,6 +211,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         public void HandshakeWithEkSeriesDevice()
         {
+            Console.WriteLine("Handshaking with Ek80 at : " + Ek80Endpoint.ToString());
             IPEndPoint remoteEp = new IPEndPoint(Ek80Endpoint, RemotePort);
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
