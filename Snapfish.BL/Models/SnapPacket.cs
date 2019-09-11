@@ -10,6 +10,7 @@ namespace Snapfish.BL.Models
         public double RangeStart { get; set; }
         public int DataLength { get; set; }
         public short[] Data { get; set; }
+        public int Biomass { get; set; }
     }
     
     public class SnapPacket
@@ -21,7 +22,6 @@ namespace Snapfish.BL.Models
         public Slice[] Slices { get; set; }
         public int NumberOfSlices { get; set; }
         public int SliceHeight { get; set; }
-        public string Biomass { get; set; }
     }
     
 }

@@ -50,24 +50,32 @@ namespace Snapfish.Console
                 else if (key.StartsWith("f"))
                 {
                     var echos = recorder.CreateEchogramFileData().Result;
-                    var packet = CreateSnapPacket(recorder, echos);
+                    List<StructIntegrationData> biomasses = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
+                    var packet = CreateSnapPacket(recorder, echos, biomasses);
                     UploadSnap(packet);
                 }
             }
         }
 
-        private static SnapPacket CreateSnapPacket(SnapfishRecorder recorder, List<Echogram> echograms)
+        private static SnapPacket CreateSnapPacket(SnapfishRecorder recorder, List<Echogram> echograms, List<StructIntegrationData> biomasses)
         {
-            var slices = new Slice[echograms.Count];
-            foreach (var i in Enumerable.Range(0, echograms.Count))
+
+            // If the biomass and echo subscriptions are not started at the exact same time, the counts will differ
+            // This makes sure there are no slices without biomass or echo data
+            var nSlices = Math.Min(echograms.Count, biomasses.Count);
+            
+            var slices = new Slice[nSlices];
+            foreach (var i in Enumerable.Range(0, nSlices))
             {
-                slices[i] = new Slice
+                var index = nSlices - 1 - i;  // Makes sure the biomasses and echo data are lined up if one started before the other
+                slices[index] = new Slice
                 {
-                    Data = echograms[i].EchogramArray.nEchogramElement,
-                    DataLength = echograms[i].EchogramArray.nEchogramElement.Length,
-                    Range = echograms[i].EchogramHeader.range,
-                    RangeStart = echograms[i].EchogramHeader.rangeStart,
-                    Timestamp = echograms[i].EchogramHeader.dlTime
+                    Data = echograms[index].EchogramArray.nEchogramElement,
+                    DataLength = echograms[index].EchogramArray.nEchogramElement.Length,
+                    Range = echograms[index].EchogramHeader.range,
+                    RangeStart = echograms[index].EchogramHeader.rangeStart,
+                    Timestamp = echograms[index].EchogramHeader.dlTime,
+                    Biomass = Convert.ToInt32(biomasses[index].IntegrationDataBody.dSa) // Todo: Set parameters for biomass subscription based on settings in connected EK80
                 };
             }
             
