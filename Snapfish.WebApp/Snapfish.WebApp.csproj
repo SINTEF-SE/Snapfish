@@ -39,6 +39,17 @@
       <_ContentIncludedByDefault Remove="wwwroot\test\src\webgl-utils.js" />
       <_ContentIncludedByDefault Remove="wwwroot\js\libs\nouislider.min.css" />
       <_ContentIncludedByDefault Remove="wwwroot\js\libs\nouislider.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\color-scale.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\DataContainer.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\libs\easypz.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\plot.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\plot.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\shaders.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\src\WebGLUtil.js" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\src\libs" />
     </ItemGroup>
 
 </Project>

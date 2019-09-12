@@ -5,6 +5,11 @@
     font-family: sans-serif;
 }
 
+.biomass-row {
+    line-height: 1.5rem;
+    padding: 0 4px;
+}
+
 .gl-plot-canvas {
     cursor: grab;
 }
@@ -29,10 +34,6 @@
 
 .latest-slice-col {
     flex-grow: 1;
-}
-
-.latest-slice-col .canvas-div{
-    /*background: #bec4cc;*/
 }
 
 .x-labels {
@@ -60,12 +61,9 @@
     flex-grow: 1;
 }
 
-.interpolation-row {
-    width: 100%;
-}
-
 .color-scale-row {
     margin: 4px;
+    user-select: none;
 }
 
 .color-scale-canvas {
@@ -86,12 +84,17 @@
 }
 
 .filter-minus, .filter-plus {
-    flex-grow: 2;
+    width: 2.5rem;
+    display: grid;
+    place-items: center center;
+    user-select: none;
+    font-size: 1.5rem;
     cursor: pointer;
     border: 1px solid #888;
     background-image: linear-gradient(#eee, #cdcdcd);
 }
-.filter-minus:hover, .filter-plus:hover {
+
+.filter-minus:active, .filter-plus:active {
     background-image: linear-gradient(#cdcdcd, #eee);
 }
 
@@ -104,6 +107,8 @@
 }
 
 .filter-slider {
+    display: grid;
+    place-items: center center;
     flex-grow: 4;
     border-top: 1px solid #888;
     border-bottom: 1px solid #888;

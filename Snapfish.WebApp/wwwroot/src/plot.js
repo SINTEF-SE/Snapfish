@@ -28,6 +28,7 @@ class Plot {
         await this.webglSetup();
         this.pzSetup();
         this.draw();
+        this.updateBiomass();
         return true;
     }
 
@@ -129,7 +130,7 @@ class Plot {
         new EasyPZ(document.getElementById(this.canvasId), transform => {
             if(this.zoomLevel == transform.scale) {
                 this.xOffset -= this.translateX - transform.translateX;
-                this.xOffset = Math.min(this.xOffset, this.data.NumberOfSlices);
+                this.xOffset = Math.min(this.xOffset, this.data.NumberOfSlices - 1);
                 this.xOffset = Math.max(this.xOffset, 0);
             }
             this.viewportOffset += this.translateY - transform.translateY;
@@ -139,6 +140,9 @@ class Plot {
             
             this.translateY = transform.translateY;
             this.translateX = transform.translateX;
+
+            this.updateBiomass();
+
         }, { minScale: 1.0, maxScale: 8.0, bounds: { top: NaN, right: NaN, bottom: NaN, left: NaN } });
     }
 
@@ -239,6 +243,11 @@ class Plot {
         this.draw();
     }
 
+    updateBiomass() {
+        const dataIndex = (this.data.NumberOfSlices - 1) - Math.round(this.xOffset);
+        this.container.querySelector(".current-biomass").innerHTML = this.data.Slices[dataIndex].Biomass;
+    }
+
     checkViewportBounds() {
         // avoid panning beyond bottom
         this.viewportOffset = this.viewportOffset > 0
@@ -313,12 +322,26 @@ class Plot {
 
     addRangeSlider() {
         const slider = document.createElement("input");
+        const minus = this.container.querySelector(".filter-minus");
+        const plus = this.container.querySelector(".filter-plus");
         slider.type = "range";
         slider.min = -9500;
         slider.max = -1000;
         slider.value = slider.min;
 
         slider.oninput = () => {
+            this.draw();
+            this.setColorScaleLabels(slider.value, slider.max);
+        };
+
+        minus.onclick = () => {
+            slider.value--;
+            this.draw();
+            this.setColorScaleLabels(slider.value, slider.max);
+        };
+
+        plus.onclick = () => {
+            slider.value++;
             this.draw();
             this.setColorScaleLabels(slider.value, slider.max);
         };
@@ -344,8 +367,10 @@ class Plot {
 
     addBaseHtml() {
         this.container.innerHTML = `
+            <div class="biomass-row">
+                Biomass: <span class="current-biomass"></span>
+            </div>
             <div class='chart-row'>
-                
                 <div class='echogram-col'>
                     <div class='y-axis'></div>
                     <div class='canvas-div'></div>
@@ -356,14 +381,10 @@ class Plot {
                     <div class='canvas-div canvas-2-div'></div>
                 </div>
             </div>
-            <div class='interpolation-row'>
-                <label class='interpolated-toggle'></label>
-            </div>
-            <div class="biomass-row"></div>
             <div class='filter-row'>
-                <div class="filter-minus"></div>
+                <div class="filter-minus">-</div>
                 <div class="filter-slider"></div>
-                <div class="filter-plus"></div>
+                <div class="filter-plus">+</div>
             </div>
             <div class='color-scale-row'>
                 <div class='color-scale'>
