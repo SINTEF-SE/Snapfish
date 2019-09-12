@@ -26,7 +26,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
     public class EkSeriesSocketDaemon
     {
         //private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("192.168.1.247");
-        private static readonly IPAddress Ek80Endpoint = GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.55"); // GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
         private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
@@ -67,8 +67,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static ConcurrentQueue<Ek80SendablePacketContainer> _sendQueue = new ConcurrentQueue<Ek80SendablePacketContainer>();
         private static readonly List<Ek80SendablePacketContainer> SentPackets = new List<Ek80SendablePacketContainer>();
         private static IList<SentSubscribableRequest> SubscribableRequestsInTransit;
-        
-        
+
+
         //TODO: Consider moving this into a container class which is stateful for each daemon. A daemon might in theory be connected to multiple EK devices. However, this will also require us to port currentActiveConnection to multiple conncetions
 
         #region API_VALUES 
@@ -131,7 +131,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private const string ApplicationLoggingPrefix = "Snapfish-logger:";
 
         #endregion
-        
+
         /*
          * THIS IS TRASH! TODO: REMOVE ME AND STUFF FURUTHER DOWN WHEN WE KNOW HOW WE ARE GOING TO IMPLEMENT THIS
          */
@@ -139,7 +139,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static Channel<SampleDataContainerClass> _sampleDataSubscriptionQueue = null;
         private static Channel<TargetsIntegration> _targetsIntegration = null;
         private static Channel<StructIntegrationData> _integrationData = null;
-        
+
         public static IPAddress GetDefaultEk80Endpoint()
         {
             var firstUpInterface = NetworkInterface.GetAllNetworkInterfaces()
@@ -155,6 +155,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                     .FirstOrDefault();
                 return firstIpV4Address;
             }
+
             return null;
         }
 
@@ -168,6 +169,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 _stateObjects[i] = new StateObject();
                 _subscriptionStateObjects[i] = new StateObject();
             }
+
             SubscribableRequestsInTransit = new List<SentSubscribableRequest>();
         }
 
@@ -192,7 +194,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         #endregion
 
-        
 
         public void PublishSubscribable()
         {
@@ -225,7 +226,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             _logger.Info("Going to receive RSI");
             ReceiveSafeStruct<EkSeriesServerInfo>(client);
             ReceiveDone.WaitOne();
-
+            _logger.Info("Received RSI");
             _remoteEkSeriesInfo = (EkSeriesServerInfo) _responseObject;
 
             #region DEBUG
@@ -249,59 +250,60 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         public void ConnectToRemoteEkDevice()
         {
-            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
-            Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
-            client.BeginConnect(remoteEndpoint, ConnectCallback, client);
-            ConnectDone.WaitOne();
+            Socket client = null;
+            while (true)
+            {
+                ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
+                client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
+                client.BeginConnect(remoteEndpoint, ConnectCallback, client);
+                ConnectDone.WaitOne();
 
-            Send(client, request);
-            SendDone.WaitOne();
+                Send(client, request);
+                SendDone.WaitOne();
 
-            ReceiveSafeStruct<Ek80Response>(client);
-            ReceiveDone.WaitOne();
+                ReceiveSafeStruct<Ek80Response>(client);
+                ReceiveDone.WaitOne();
+
+                if (_responseObject is Ek80Response) // I HAVE NO IDEA WHY THIS HAPPENS
+                {
+                    break;
+                }
+
+                client.Close();
+            }
 
             Ek80Response response = (Ek80Response) _responseObject;
             _connectRequestResponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
 
             #region DEBUG // IFDEBUG?
 
-            Console.WriteLine("Received a response to the connection request with the following info:\n" +
-                              "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
-                              "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
-                              "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
-            _logger.Debug("Received a response to the connection request with the following info:\n" +
-                          "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
-                          "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
-                          "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
+            Console.WriteLine("Received a response to the connection request with the following info:\n" + "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                              "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" + "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
+            _logger.Debug("Received a response to the connection request with the following info:\n" + "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                          "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" + "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
 
             #endregion
 
             _currentActiveConnection = new ConnectionToEkSeriesDevice {ActiveSocket = client, SequenceNumber = 1};
-            Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket),
-                TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket), TaskCreationOptions.LongRunning);
             Thread sendThread = new Thread(SendThreadMethod) {IsBackground = true};
 
             IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
             Socket subscriptionReceiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             subscriptionReceiver.Bind(e);
             sendThread.Start();
-            Task.Factory.StartNew(() => SubscriptionSocketReceiver(subscriptionReceiver),
-                TaskCreationOptions.RunContinuationsAsynchronously);
+            Task.Factory.StartNew(() => SubscriptionSocketReceiver(subscriptionReceiver), TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         private void SendPacketsFromQueueInOrder()
         {
-            
-            
-            
             try
             {
                 if (!_isRetransmitting)
                 {
                     while (!_sendQueue.IsEmpty)
                     {
-
                         _sendQueue.TryPeek(out Ek80SendablePacketContainer structure);
                         Send(_currentActiveConnection.ActiveSocket, structure.SendableStruct.ToArray());
                         SendDone.WaitOne();
@@ -333,7 +335,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         private void CheckIfSubscribableNeedsToBeRetransmitted()
         {
-            
         }
 
 
@@ -415,9 +416,10 @@ namespace Snapfish.EkSeriesPubsubLibrary
                     throw new ArgumentOutOfRangeException(nameof(requestType), requestType, null);
             }
 
-            #if DEBUG
+#if DEBUG
+
             #region DEBUG_REGION
-            
+
             switch (subscriptionType)
             {
                 case EkSeriesDataSubscriptionType.Echogram:
@@ -456,10 +458,11 @@ namespace Snapfish.EkSeriesPubsubLibrary
                 default:
                     throw new ArgumentOutOfRangeException(nameof(subscriptionType), subscriptionType, null);
             }
+
             #endregion
 
-            #endif
-            
+#endif
+
             request.MsgControl = (_currentActiveConnection.SequenceNumber + ",1,1\0\0\0\0").ToCharArray();
             request.MsgRequest = ("<request>" +
                                   "<clientInfo>" +
@@ -483,6 +486,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             {
                 SubscribableRequestsInTransit.Add(new SentSubscribableRequest(subscriptionType, _currentActiveConnection.SequenceNumber, request));
             }
+
             EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber++);
         }
 
@@ -512,7 +516,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             request.SetMethodInvocationType(ekSeriesParameterType.ToString());
             EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber);
             _currentActiveConnection.SequenceNumber++;
-            DebugPrint("Just sent a parameter request to the EK-Device with the following info: " + new string(request.MsgControl)  + "  ::  " + new string(request.MsgRequest));
+            DebugPrint("Just sent a parameter request to the EK-Device with the following info: " + new string(request.MsgControl) + "  ::  " + new string(request.MsgRequest));
         }
 
         private ConnectRequestReponseStruct ParseResultsFromEkSeriesDevice(string response)
@@ -587,6 +591,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                             {
                                 DebugPrint("Remember to remove me");
                             }
+
                             EkSeriesDataSubscriptionType type = _subscriptionIdToTypeMap[processedData.SubscriptionID];
                             switch (type)
                             {
@@ -623,6 +628,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE INTEGRATION TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE INTEGRATION TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.IntegrationChirp:
                                     break;
@@ -633,6 +639,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                         Console.WriteLine("\"COULD NOT WRITE TS TO CHANNEL! W00t\"");
                                         _logger.Alert("COULD NOT WRITE TS TO CHANNEL! W00t");
                                     }
+
                                     break;
                                 case EkSeriesDataSubscriptionType.NoiseSpectrum:
                                     break;
@@ -726,11 +733,11 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
                                     List<Ek80SendablePacketContainer> SentPacketsClone = new List<Ek80SendablePacketContainer>();
                                     foreach (var pck in SentPackets)
-                                {
-                                    var obj = new Ek80SendablePacketContainer {SendableStruct = pck.SendableStruct, SequenceNumber = pck.SequenceNumber};
-                                    SentPacketsClone.Add(obj);
-                                }
-                                    
+                                    {
+                                        var obj = new Ek80SendablePacketContainer {SendableStruct = pck.SendableStruct, SequenceNumber = pck.SequenceNumber};
+                                        SentPacketsClone.Add(obj);
+                                    }
+
                                     foreach (var packet in SentPacketsClone)
                                     {
                                         if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
@@ -850,13 +857,13 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                             DebugPrint("Removed from sent subscriptions: " + req.Id);
                                             break;
                                         }
-                                    }                                   
-                                    
+                                    }
+
                                     if (_subscriptionIdToTypeMap.ContainsKey(Int64.Parse(subscriptionNode.Value)))
                                     {
                                         break;
                                     }
-                                    
+
                                     foreach (var packet in SentPackets.ToList()) //Need a copy of the list to avoid enumerating while the collection is being modified.
                                     {
                                         if (packet.SequenceNumber == Int64.Parse(((XElement) ((XElement) messageResponse.FirstNode).LastNode).Value))
@@ -940,9 +947,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         public static void DebugPrint(string message)
         {
-            #if DEBUG
+#if DEBUG
             Console.WriteLine(message);
-            #endif
+#endif
         }
 
         #region PARAMETER_GETTERS
@@ -1195,7 +1202,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             _targetsIntegration = targetsIntegrationQueue;
             SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.TargetsIntegration);
         }
-        
+
         public void CreateBiomassSubscription(ref Channel<StructIntegrationData> IntegrationQueue)
         {
             _integrationData = IntegrationQueue;
@@ -1223,6 +1230,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         {
             try
             {
+                _logger.Info("Inside connect callback");
                 Socket client = (Socket) ar.AsyncState;
                 client.EndConnect(ar);
                 ConnectDone.Set();

@@ -19,30 +19,22 @@ namespace Snapfish.AlwaysOnTop
     /// </summary>
     public partial class MainWindow
     {
-        public static SnapfishRecorder recorder = null; 
+        public static SnapfishRecorder recorder = new SnapfishRecorder(); 
         public static Boolean recorderInitialized = false;
         public MainWindow()
         {
             InitializeComponent();
-/*            sendButton.IsEnabled = false;
-
-            Thread viewerThread = new Thread(delegate ()
-            {
-                recorder.InstallDaemon();
-                Thread.Sleep(7000);
-                recorder.CreateEchoSubscription();
-                recorder.CreateBiomassSub();
-                recorderInitialized = true;
-                sendButton.IsEnabled = true;
-                //viewer = new SkeletalViewer.MainWindow();
-                //viewer.Show();
-                //System.Windows.Threading.Dispatcher.Run();
-            });
-            viewerThread.Start();
-            */
             Left = System.Windows.SystemParameters.PrimaryScreenWidth - Width - 205;
         }
 
+        public async static void InitializeRecorder()
+        {
+            recorder.InstallDaemon();
+            Thread.Sleep(500);
+            recorder.CreateEchoSubscription();
+            recorder.CreateBiomassSub();
+            recorderInitialized = true;
+        }
 
         public static async Task<Boolean> StartRecorder()
         {
@@ -63,7 +55,7 @@ namespace Snapfish.AlwaysOnTop
             if (recorderInitialized)
                 Task.Run(PostSnap).ContinueWith(task => displayMessageBoxOnSuccessfullSnapSent(task));
             else
-                Task.Run(StartRecorder);
+                InitializeRecorder();
         }
 
         private void displayMessageBoxOnSuccessfullSnapSent(Task<string> task)
@@ -74,9 +66,7 @@ namespace Snapfish.AlwaysOnTop
         public static async Task<string> PostSnap()
         {
             List<Echogram> echos = recorder.CreateEchogramFileData().Result;
-            ///List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
-            //var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
-
+            
             var packet = CreateSnapPacket(recorder, echos);
             UploadSnap(packet);
 
@@ -138,47 +128,5 @@ namespace Snapfish.AlwaysOnTop
             }
         }
 
-
-
-        /*      public static async Task<string> PostSnap()
-              {
-                  List<Echogram> echos = recorder.CreateEchogramFileData().Result;
-                  List<StructIntegrationData> biomass = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
-                  var packet = CreateTransmissableDataPacket(recorder, echos, biomass);
-
-
-                  string retval = "";
-                  using (var client = new HttpClient())
-                  {
-                      var postTableContent = new FormUrlEncodedContent(new[]
-                      {
-                          new KeyValuePair<string, string>("id", "1"),
-                      });
-
-                      var result = await client.PostAsync("http://10.218.69.76:5002/api/EchogramInfos/", postTableContent);
-                      string resultContent = await result.Content.ReadAsStringAsync();
-                      retval = resultContent;
-                      System.Console.WriteLine(retval);
-                  }
-                  return retval;
-              }
-      */
-
-
-        /*
-                public static EchogramTransmissionPacket CreateTransmissableDataPacket(SnapfishRecorder recorder, List<Echogram> echos, List<StructIntegrationData> biomasses)
-                {
-                    EchogramTransmissionPacket packet = new EchogramTransmissionPacket
-                    {
-                        Latitude = recorder.GetLatitude(),
-                        Longitude = recorder.GetLongitude(),
-                        ApplicationName = recorder.GetApplicationName(),
-                        ApplicationType = recorder.GetApplicationType(),
-                        Echograms = echos,
-                        Biomasses = biomasses
-                    };
-                    return packet;
-                }
-                */
     }
 }
