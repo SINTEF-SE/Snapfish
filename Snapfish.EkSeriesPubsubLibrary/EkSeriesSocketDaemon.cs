@@ -27,7 +27,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
     {
         //private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("192.168.1.247");
         private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.55"); // GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
-        private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
+        private static readonly AutoResetEvent ConnectDone = new AutoResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SubscriptionReceiveEvent = new ManualResetEvent(false);
