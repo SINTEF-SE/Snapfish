@@ -26,8 +26,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
     public class EkSeriesSocketDaemon
     {
         //private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("192.168.1.247");
-        private static readonly IPAddress Ek80Endpoint = GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
-        private static readonly ManualResetEvent ConnectDone = new ManualResetEvent(false);
+        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.0.0.66"); //GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
+        private static readonly AutoResetEvent ConnectDone = new AutoResetEvent(false);
         private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
         private static readonly ManualResetEvent SubscriptionReceiveEvent = new ManualResetEvent(false);
@@ -217,8 +217,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
             client.BeginConnect(remoteEp, ConnectCallback, client);
             ConnectDone.WaitOne();
-
+            
             _logger.Info("Beginning send RSI:");
+            Console.WriteLine("Beginning send RSI:");
             Send(client, "RSI\0"); // Handshake to EK80
             SendDone.WaitOne();
 
