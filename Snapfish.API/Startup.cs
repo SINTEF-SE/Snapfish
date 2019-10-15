@@ -13,9 +13,9 @@ using Microsoft.Extensions.DependencyInjection;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using SintefSecure.Framework.SintefSecure.AspNetCore.OpenIdDict;
 using SintefSecureBoilerplate.DAL.Identity;
-using Snapfish.API.API.Constants;
+using Snapfish.API.Constants;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     /// <summary>
     /// The main start-up class for the application.
@@ -61,6 +61,10 @@ namespace Snapfish.API.API
                     // Note: use the generic overload if you need
                     // to replace the default OpenIddict entities.
                     options.UseOpenIddict();
+                })
+                .AddDbContext<SnapContext>(options =>
+                {
+                    options.UseSqlServer(configuration.GetConnectionString("SnapMessageDB")); //TODO ask Peter
                 })
                 .AddIdentityDataStores()
                 //Configure Identity to use the same JWT claims as OpenIddict instead
