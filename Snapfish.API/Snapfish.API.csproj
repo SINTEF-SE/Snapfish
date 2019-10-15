@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp2.2</TargetFramework>
         <ApplicationIcon />
-        <UserSecretsId>Snapfish.API.API-C1741660-D5FC-4530-B19F-CC914C2E19B4</UserSecretsId>
+        <UserSecretsId>Snapfish.API-C1741660-D5FC-4530-B19F-CC914C2E19B4</UserSecretsId>
         <LangVersion>latest</LangVersion>
         <OutputType>Exe</OutputType>
         <StartupObject />

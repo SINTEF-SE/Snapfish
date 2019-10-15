@@ -1,11 +1,10 @@
-﻿using Snapfish.API.Models;
+﻿using Snapfish.BL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Snapfish.BL.Models;
 
-namespace Snapfish.API.Data
+namespace Snapfish.API.Database
 {
     public static class DbInitializer
     {

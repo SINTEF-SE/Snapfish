@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Snapfish.API.API.OperationFilters
+namespace Snapfish.API.OperationFilters
 {
     public class ApiVersionOperationFilter : IOperationFilter
     {

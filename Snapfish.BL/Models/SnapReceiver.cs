@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 //using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Snapfish.API.Models
+namespace Snapfish.BL.Models
 {
     public class SnapReceiver
     {

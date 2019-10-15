@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.Operations;
 using Serilog;
 
-namespace Snapfish.API.API.Constants
+namespace Snapfish.API.Constants
 {
     public class AuthorizationControllerRoute
     {

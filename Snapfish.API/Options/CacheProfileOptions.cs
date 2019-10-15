@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Snapfish.API.API.Options
+namespace Snapfish.API.Options
 {
     /// <summary>
     /// The caching options for the application.

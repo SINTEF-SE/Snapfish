@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
-using Snapfish.API.Models;
 using Snapfish.BL.Models;
+using Snapfish.API.Database;
 
 namespace Snapfish.API.Controllers
 {

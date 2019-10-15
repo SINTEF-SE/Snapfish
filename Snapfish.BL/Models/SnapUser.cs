@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Snapfish.API.Models
+namespace Snapfish.BL.Models
 {
     public class SnapUser
     {

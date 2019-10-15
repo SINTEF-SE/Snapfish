@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API.Constants
+﻿namespace Snapfish.API.Constants
 {
     public static class ControllerName
     {

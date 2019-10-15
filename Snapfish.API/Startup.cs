@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using SintefSecure.Framework.SintefSecure.AspNetCore.OpenIdDict;
 using SintefSecureBoilerplate.DAL.Identity;
+using Snapfish.API.Database;
 using Snapfish.API.Constants;
 
 namespace Snapfish.API

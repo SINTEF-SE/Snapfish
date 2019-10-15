@@ -1,6 +1,6 @@
-    using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-namespace Snapfish.API.API.Options
+namespace Snapfish.API.Options
 {
     /// <summary>
     /// All options for the application.

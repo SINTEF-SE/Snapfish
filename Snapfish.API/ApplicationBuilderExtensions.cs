@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using SintefSecureBoilerplate.DAL.Identity;
-using Snapfish.API.API.Constants;
-using Snapfish.API.API.Options;
+using Snapfish.API.Constants;
+using Snapfish.API.Options;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     public static partial class ApplicationBuilderExtensions
     {

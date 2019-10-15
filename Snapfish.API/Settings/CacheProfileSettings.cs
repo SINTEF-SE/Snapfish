@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API.Settings
+﻿namespace Snapfish.API.Settings
 {
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Mvc;

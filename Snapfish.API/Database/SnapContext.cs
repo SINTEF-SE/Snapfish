@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Snapfish.BL.Models;
 
-namespace Snapfish.API.Models
+namespace Snapfish.API.Database
 {
     public class SnapContext : DbContext
     {

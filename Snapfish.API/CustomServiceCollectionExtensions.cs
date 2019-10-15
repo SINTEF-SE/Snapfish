@@ -19,12 +19,12 @@ using SintefSecure.Framework.SintefSecure.Swagger;
 using SintefSecure.Framework.SintefSecure.Swagger.OperationFilters;
 using SintefSecure.Framework.SintefSecure.Swagger.SchemaFilters;
 using SintefSecureBoilerplate.DAL.Identity;
-using Snapfish.API.API.Constants;
-using Snapfish.API.API.OperationFilters;
-using Snapfish.API.API.Options;
+using Snapfish.API.Constants;
+using Snapfish.API.OperationFilters;
+using Snapfish.API.Options;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     /// <summary>
     /// <see cref="IServiceCollection"/> extension methods which extend ASP.NET Core services.

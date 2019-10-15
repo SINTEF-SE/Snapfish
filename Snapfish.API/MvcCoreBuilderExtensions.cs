@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-    using Snapfish.API.API.Constants;
-using Snapfish.API.API.Options;
+    using Snapfish.API.Constants;
+using Snapfish.API.Options;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     public static class MvcCoreBuilderExtensions
     {

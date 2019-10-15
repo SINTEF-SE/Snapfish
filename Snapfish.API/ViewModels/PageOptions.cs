@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Snapfish.API.API.ViewModels
+namespace Snapfish.API.ViewModels
 {
     public class PageOptions
     {

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SintefSecure.Framework.SintefSecure.Mapping;
-using Snapfish.API.API.Services;
-using Snapfish.API.API.ViewModels;
+using Snapfish.API.Services;
+using Snapfish.API.ViewModels;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     /// <summary>
     /// <see cref="IServiceCollection"/> extension methods add project services.

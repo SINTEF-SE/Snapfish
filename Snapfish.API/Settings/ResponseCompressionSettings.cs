@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API.Settings
+﻿namespace Snapfish.API.Settings
 {
     public class ResponseCompressionSettings
     {

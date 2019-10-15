@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API
+﻿namespace Snapfish.API
 {
     using System.Threading.Tasks;
 

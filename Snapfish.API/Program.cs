@@ -9,9 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
-using Snapfish.API.API.Options;
+using Snapfish.API.Options;
+using Snapfish.API.Database;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     public sealed class Program
     {
@@ -20,7 +21,7 @@ namespace Snapfish.API.API
         public static int LogAndRun(IWebHost webHost)
         {
             Log.Logger = BuildLogger(webHost);
-
+            InitSnapDB(webHost);
             try
             {
                 Log.Information("Starting application");
@@ -37,6 +38,25 @@ namespace Snapfish.API.API
             {
                 Log.CloseAndFlush();
             }
+        }
+
+
+        public static void InitSnapDB(IWebHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<SnapContext>();
+                    DbInitializer.Initialize(context);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "An error occurred while seeding the database.");
+                }
+            }
+
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
