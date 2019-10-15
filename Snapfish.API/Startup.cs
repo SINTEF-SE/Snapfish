@@ -53,7 +53,11 @@ namespace Snapfish.API
                 .AddResponseCaching()
                 .AddCustomResponseCompression()
                 .AddCustomStrictTransportSecurity()
-                .AddCustomSwagger()
+                .AddCustomSwagger() 
+                .AddDbContext<SnapContext>(options =>
+                {
+                    options.UseSqlServer(configuration.GetConnectionString("FiskinfoSnapfishConnection")); 
+                })
                 .AddDbContext<IdentityDatabaseContext>(options =>
                 {
                     // Configure the context to use Microsoft SQL Server.
@@ -62,10 +66,6 @@ namespace Snapfish.API
                     // Note: use the generic overload if you need
                     // to replace the default OpenIddict entities.
                     options.UseOpenIddict();
-                })
-                .AddDbContext<SnapContext>(options =>
-                {
-                    options.UseSqlServer(configuration.GetConnectionString("SnapMessageDB")); //TODO ask Peter
                 })
                 .AddIdentityDataStores()
                 //Configure Identity to use the same JWT claims as OpenIddict instead
@@ -110,7 +110,7 @@ namespace Snapfish.API
         /// </summary>
         public void Configure(IApplicationBuilder application) =>
             application
-// Pass a GUID in a X-Correlation-ID HTTP header to set the HttpContext.TraceIdentifier.
+                // Pass a GUID in a X-Correlation-ID HTTP header to set the HttpContext.TraceIdentifier.
                 .UseCorrelationId()
                 .UseAuthentication()
                 .InitializeIdentityDatabase(hostingEnvironment,
@@ -126,8 +126,8 @@ namespace Snapfish.API
                     this.hostingEnvironment.IsDevelopment(),
                     x => x.UseDeveloperErrorPages())
                 .UseStaticFilesWithCacheControl()
-                .UseMvc()
-                .UseSwagger()
-                .UseCustomSwaggerUI();
+                .UseMvc();
+                //.UseSwagger()
+                //.UseCustomSwaggerUI(); TODO: Peter fix swagger
     }
 }
