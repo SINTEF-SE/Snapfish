@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
+using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -49,11 +51,10 @@ namespace Snapfish.AlwaysOnTop
         }
 
 
-
         private void OnSnapButtonClicked(object sender, RoutedEventArgs e)
         {
             if (recorderInitialized)
-                Task.Run(PostSnap).ContinueWith(task => displayMessageBoxOnSuccessfullSnapSent(task));
+                Task.Run(PostSnap).ContinueWith(displayMessageBoxOnSuccessfullSnapSent);
             else
                 InitializeRecorder();
         }
@@ -66,8 +67,9 @@ namespace Snapfish.AlwaysOnTop
         public static async Task<string> PostSnap()
         {
             List<Echogram> echos = recorder.CreateEchogramFileData().Result;
+            List<StructIntegrationData> biomasses = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
             
-            var packet = CreateSnapPacket(recorder, echos);
+            var packet = CreateSnapPacket(recorder, echos, biomasses);
             UploadSnap(packet);
 
 
@@ -87,21 +89,28 @@ namespace Snapfish.AlwaysOnTop
             return retval;
         }
 
-        private static SnapPacket CreateSnapPacket(SnapfishRecorder recorder, List<Echogram> echograms)
+        private static SnapPacket CreateSnapPacket(SnapfishRecorder recorder, List<Echogram> echograms, List<StructIntegrationData> biomasses)
         {
-            var slices = new Slice[echograms.Count];
-            foreach (var i in Enumerable.Range(0, echograms.Count))
+
+            // If the biomass and echo subscriptions are not started at the exact same time, the counts will differ
+            // This makes sure there are no slices without biomass or echo data
+            var nSlices = Math.Min(echograms.Count, biomasses.Count);
+            
+            var slices = new Slice[nSlices];
+            foreach (var i in Enumerable.Range(0, nSlices))
             {
-                slices[i] = new Slice
+                var index = nSlices - 1 - i;  // Makes sure the biomasses and echo data are lined up if one started before the other
+                slices[index] = new Slice
                 {
-                    Data = echograms[i].EchogramArray.nEchogramElement,
-                    DataLength = echograms[i].EchogramArray.nEchogramElement.Length,
-                    Range = echograms[i].EchogramHeader.range,
-                    RangeStart = echograms[i].EchogramHeader.rangeStart,
-                    Timestamp = echograms[i].EchogramHeader.dlTime
+                    Data = echograms[index].EchogramArray.nEchogramElement,
+                    DataLength = echograms[index].EchogramArray.nEchogramElement.Length,
+                    Range = echograms[index].EchogramHeader.range,
+                    RangeStart = echograms[index].EchogramHeader.rangeStart,
+                    Timestamp = echograms[index].EchogramHeader.dlTime,
+                    Biomass = Convert.ToInt32(biomasses[index].IntegrationDataBody.dSa) // Todo: Set parameters for biomass subscription based on settings in connected EK80
                 };
             }
-
+            
             return new SnapPacket
             {
                 OwnerId = 212, // TODO: Handle OwnerId when posting new Snap
@@ -128,5 +137,23 @@ namespace Snapfish.AlwaysOnTop
             }
         }
 
+        private void ImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            Console.WriteLine("ON DOUBLE CLICK BABY!");
+            var dlg = new SettingsWindow
+            {
+                Owner = this
+            };
+            dlg.ShowDialog();
+
+            // Process data entered by user if dialog box is accepted
+            if (dlg.DialogResult == true)
+            {
+                // For some reason validation doesnt work, no idea why
+                Debug.WriteLine(dlg.IpAdress);
+               
+            }
+        }
     }
 }
