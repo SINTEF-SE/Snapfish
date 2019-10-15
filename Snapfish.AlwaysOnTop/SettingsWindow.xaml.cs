@@ -11,10 +11,11 @@ namespace Snapfish.AlwaysOnTop
         {
             InitializeComponent();
         }
-        public Thickness DocumentMargin
+        
+        public SettingsContainer SettingsInfo
         {
-            get => (Thickness) DataContext;
-            set => DataContext = value;
+            get { return (SettingsContainer) DataContext; }
+            set { DataContext = value; }
         }
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)
@@ -40,8 +41,8 @@ namespace Snapfish.AlwaysOnTop
 
         public string EkSeriesUsername
         {
-            get => ekDeviceUsernameTextBox.Text;
-            set => ekDeviceUsernameTextBox.Text = value;
+            get => topMarginTextBox.Text;
+            set => topMarginTextBox.Text = value;
         }
         
         public string EkSeriesPassword

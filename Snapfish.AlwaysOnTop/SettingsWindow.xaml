@@ -62,7 +62,7 @@
         <Label Grid.Column="0" Grid.Row="0">IP address:</Label>
         <TextBox Name="ipAddressTextBox" Grid.Column="1" Grid.Row="0">
             <TextBox.Text>
-                <Binding Path="." UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="ipaddr" Source="SettingsWindow" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
                     </Binding.ValidationRules>
@@ -72,9 +72,9 @@
 
         <!-- Top Margin -->
         <Label Grid.Column="0" Grid.Row="1">EkDevice Username:</Label>
-        <TextBox Name="ekDeviceUsernameTextBox" Grid.Column="1" Grid.Row="1">
+        <TextBox Name="topMarginTextBox" Grid.Column="1" Grid.Row="1">
             <TextBox.Text>
-                <Binding Path="." UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="username" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
                     </Binding.ValidationRules>
@@ -86,7 +86,7 @@
         <Label Grid.Column="0" Grid.Row="2">EkDevice Password:</Label>
         <TextBox Name="EkDevicePasswordTextBox" Grid.Column="1" Grid.Row="2">
             <TextBox.Text>
-                <Binding Path="Right" UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="password" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
                     </Binding.ValidationRules>
@@ -98,7 +98,7 @@
         <Label Grid.Column="0" Grid.Row="3">Sender name:</Label>
         <TextBox Name="senderNameTextBox" Grid.Column="1" Grid.Row="3">
             <TextBox.Text>
-                <Binding Path="." UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="name" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
                     </Binding.ValidationRules>

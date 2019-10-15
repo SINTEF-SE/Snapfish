@@ -23,6 +23,7 @@ namespace Snapfish.AlwaysOnTop
     {
         public static SnapfishRecorder recorder = new SnapfishRecorder(); 
         public static Boolean recorderInitialized = false;
+        public static SettingsContainer SettingsContainer = new SettingsContainer();
         public MainWindow()
         {
             InitializeComponent();
@@ -140,10 +141,17 @@ namespace Snapfish.AlwaysOnTop
         private void ImageButton_Click(object sender, RoutedEventArgs e)
         {
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            Console.WriteLine("ON DOUBLE CLICK BABY!");
+            var appSettings = ConfigurationManager.AppSettings;  
+            //Load from config if possible
+            SettingsContainer.ipaddr = appSettings["ipaddr"] ?? "Not found";
+            SettingsContainer.username = appSettings["username"] ?? "Not found";
+            SettingsContainer.password = appSettings["password"] ?? "Not found";
+            SettingsContainer.name = appSettings["name"] ?? "Not found";
+            
             var dlg = new SettingsWindow
             {
-                Owner = this
+                Owner = this,
+                DataContext = SettingsContainer
             };
             dlg.ShowDialog();
 
@@ -152,7 +160,8 @@ namespace Snapfish.AlwaysOnTop
             {
                 // For some reason validation doesnt work, no idea why
                 Debug.WriteLine(dlg.IpAdress);
-               
+                SettingsContainer =  dlg.SettingsInfo;
+
             }
         }
     }
