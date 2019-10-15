@@ -53,6 +53,9 @@ namespace Snapfish.Console
                     List<StructIntegrationData> biomasses = recorder.CreateSubscribableFileData<StructIntegrationData>(EkSeriesDataSubscriptionType.Integration).Result;
                     var packet = CreateSnapPacket(recorder, echos, biomasses);
                     UploadSnap(packet);
+                } else if (key.StartsWith("v"))
+                {
+                    recorder.DisconnectFromConnectedEkDevice();
                 }
             }
         }

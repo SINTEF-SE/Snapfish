@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -20,20 +21,16 @@ using Snapfish.EkSeriesPubsubLibrary.Domain;
 
 namespace Snapfish.EkSeriesPubsubLibrary
 {
-    /*
-     * TODO: Implement cleanup AND CLEAN UP THE CODE. BECAUSE JEEEEEZ
-     */
     public class EkSeriesSocketDaemon
     {
         //private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("192.168.1.247");
-        private static readonly IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.55"); // GetDefaultEk80Endpoint(); //IPAddress.Parse("10.218.157.50");
         private static readonly AutoResetEvent ConnectDone = new AutoResetEvent(false);
-        private static readonly ManualResetEvent SendDone = new ManualResetEvent(false);
-        private static readonly ManualResetEvent ReceiveDone = new ManualResetEvent(false);
-        private static readonly ManualResetEvent SubscriptionReceiveEvent = new ManualResetEvent(false);
-        private static readonly ManualResetEvent SendQueueEmptied = new ManualResetEvent(false);
+        private static readonly AutoResetEvent SendDone = new AutoResetEvent(false);
+        private static readonly AutoResetEvent ReceiveDone = new AutoResetEvent(false);
+        private static readonly AutoResetEvent SubscriptionReceiveEvent = new AutoResetEvent(false);
+        private static readonly AutoResetEvent SendQueueEmptied = new AutoResetEvent(false);
         private static readonly object SendLock = new object();
-        private const int QueueSize = 256;
+        private const int QueueSize = 1 << 8;
         private const int MaximumIncomingDatagrams = 1 << 8;
         private const int MillisecondsUntilSubscribableRetransmission = 5000;
 
@@ -47,6 +44,8 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static ConnectionToEkSeriesDevice _currentActiveConnection; //TODO: LIST?
 
         private static Dictionary<long, EkSeriesDataSubscriptionType> _subscriptionIdToTypeMap = new Dictionary<long, EkSeriesDataSubscriptionType>();
+
+        private static IPAddress Ek80Endpoint = IPAddress.Parse("10.218.68.55");
 
         /*
          * Max 256 concurrent 'connections' actually UDP datagrams incoming, because there is a bug in the socket implmentation in c# which makes the overlapped memory region un-freeable
@@ -159,11 +158,10 @@ namespace Snapfish.EkSeriesPubsubLibrary
             return null;
         }
 
-        public EkSeriesSocketDaemon()
+        public EkSeriesSocketDaemon(string ipaddr = "")
         {
             InitializeLogger();
-            _logger.Info(
-                "===================================|Booting up snapfish daemon|===================================");
+            _logger.Info("===================================|Booting up snapfish daemon|===================================");
             for (int i = 0; i < MaximumIncomingDatagrams; i++)
             {
                 _stateObjects[i] = new StateObject();
@@ -171,6 +169,23 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
 
             SubscribableRequestsInTransit = new List<SentSubscribableRequest>();
+            Ek80Endpoint = !ipaddr.Equals("") ? IPAddress.Parse(ipaddr) : GetDefaultEk80Endpoint();
+
+            // Add handler for SIGINT && SIGTERM
+            var cts = new CancellationTokenSource();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                Console.WriteLine("Closing EKSocket Daemon");
+                DisconnectFromRemoteEkDevice();
+                cts.Cancel();
+            };
+
+            Console.CancelKeyPress += delegate
+            {
+                Console.WriteLine("Closing EKSocket Daemon");
+                DisconnectFromRemoteEkDevice();
+                Console.WriteLine("Finished disconnecting");
+            };
         }
 
         #region Logging
@@ -194,6 +209,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         #endregion
 
+        //__I AM SO SORRY
 
         public void PublishSubscribable()
         {
@@ -250,50 +266,54 @@ namespace Snapfish.EkSeriesPubsubLibrary
 
         public void ConnectToRemoteEkDevice()
         {
-            Socket client = null;
-            while (true)
-            {
-                ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
-                client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
-                client.BeginConnect(remoteEndpoint, ConnectCallback, client);
-                ConnectDone.WaitOne();
+            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
+            Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
+            client.BeginConnect(remoteEndpoint, ConnectCallback, client);
+            ConnectDone.WaitOne();
 
-                Send(client, request);
-                SendDone.WaitOne();
+            Send(client, request);
+            SendDone.WaitOne();
 
-                ReceiveSafeStruct<Ek80Response>(client);
-                ReceiveDone.WaitOne();
-
-                if (_responseObject is Ek80Response) // I HAVE NO IDEA WHY THIS HAPPENS
-                {
-                    break;
-                }
-
-                client.Close();
-            }
+            ReceiveSafeStruct<Ek80Response>(client);
+            ReceiveDone.WaitOne();
 
             Ek80Response response = (Ek80Response) _responseObject;
             _connectRequestResponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
 
             #region DEBUG // IFDEBUG?
 
-            Console.WriteLine("Received a response to the connection request with the following info:\n" + "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
-                              "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" + "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
-            _logger.Debug("Received a response to the connection request with the following info:\n" + "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
-                          "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" + "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
+            Console.WriteLine("Received a response to the connection request with the following info:\n" +
+                              "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                              "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
+                              "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
+            _logger.Debug("Received a response to the connection request with the following info:\n" +
+                          "\tResultCode: " + _connectRequestResponseStruct.ResultCode + "\n" +
+                          "\tClientID: " + _connectRequestResponseStruct.ClientID + "\n" +
+                          "\tAccessLevel: " + _connectRequestResponseStruct.AccessLevel + "\n");
 
             #endregion
 
             _currentActiveConnection = new ConnectionToEkSeriesDevice {ActiveSocket = client, SequenceNumber = 1};
-            Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => BeginActiveOperationLoop(_currentActiveConnection.ActiveSocket),
+                TaskCreationOptions.LongRunning);
             Thread sendThread = new Thread(SendThreadMethod) {IsBackground = true};
 
             IPEndPoint e = new IPEndPoint(IPAddress.Any, 8572);
             Socket subscriptionReceiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             subscriptionReceiver.Bind(e);
             sendThread.Start();
-            Task.Factory.StartNew(() => SubscriptionSocketReceiver(subscriptionReceiver), TaskCreationOptions.RunContinuationsAsynchronously);
+            Task.Factory.StartNew(() => SubscriptionSocketReceiver(subscriptionReceiver),
+                TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        public void DisconnectFromRemoteEkDevice()
+        {
+            ConnectRequest request = new ConnectRequest {Header = "DIS\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
+            Send(_currentActiveConnection.ActiveSocket, request);
+            SendDone.WaitOne();
+            // Now we should be disconnected
+            Console.WriteLine("Should be disconnected");
         }
 
         private void SendPacketsFromQueueInOrder()

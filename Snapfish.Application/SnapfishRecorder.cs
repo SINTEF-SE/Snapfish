@@ -16,7 +16,7 @@ namespace Snapfish.Application
         private static Channel<SampleDataContainerClass> _sampleDataBoundedBuffer;
         private static Channel<TargetsIntegration> _targetsBiomassBoundedBuffer;
         public static Channel<StructIntegrationData> _biomassBoundedBuffer;
-        private readonly EkSeriesSocketDaemon _daemon = new EkSeriesSocketDaemon();
+        private readonly EkSeriesSocketDaemon _daemon = new EkSeriesSocketDaemon("10.218.68.118");
 
         private string _applicationName;
         private string _applicationType;
@@ -65,6 +65,11 @@ namespace Snapfish.Application
             MakeDaemonFetchAttachGeoData();
         }
 
+        public void DisconnectFromConnectedEkDevice()
+        {
+            _daemon.DisconnectFromRemoteEkDevice();
+        }
+        
         public void CreateEchoSubscription()
         {
             _daemon.CreateEchogramSubscription(ref _boundedBuffer);
