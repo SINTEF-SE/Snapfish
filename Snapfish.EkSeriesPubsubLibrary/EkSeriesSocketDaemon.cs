@@ -227,7 +227,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         }
 
         public void HandshakeWithEkSeriesDevice()
-        {
+         {
             Console.WriteLine("Handshaking with Ek80 at : " + Ek80Endpoint.ToString());
             IPEndPoint remoteEp = new IPEndPoint(Ek80Endpoint, RemotePort);
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -278,7 +278,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             ReceiveSafeStruct<Ek80Response>(client);
             ReceiveDone.WaitOne();
 
-            Ek80Response response = (Ek80Response) _responseObject;
+             Ek80Response response = (Ek80Response) _responseObject;
             _connectRequestResponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
 
             #region DEBUG // IFDEBUG?
