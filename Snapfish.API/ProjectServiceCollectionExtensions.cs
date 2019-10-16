@@ -2,6 +2,7 @@
 using SintefSecure.Framework.SintefSecure.Mapping;
 using Snapfish.API.Services;
 using Snapfish.API.ViewModels;
+using Snapfish.API.Commands;
 
 namespace Snapfish.API
 {
@@ -16,7 +17,8 @@ namespace Snapfish.API
     public static class ProjectServiceCollectionExtensions
     {
         public static IServiceCollection AddProjectCommands(this IServiceCollection services) =>
-            services;
+            services 
+                .AddSingleton<IGetSnapMetadatasCommand, GetSnapMetadatasCommand>();
 
         public static IServiceCollection AddProjectMappers(this IServiceCollection services) =>
             services;

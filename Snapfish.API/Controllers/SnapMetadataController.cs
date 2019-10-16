@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Snapfish.BL.Models;
 using Snapfish.API.Database;
+using Snapfish.API.Commands;
+using System.Threading;
 
 namespace Snapfish.API_OLD.Controllers
 {
@@ -19,14 +21,22 @@ namespace Snapfish.API_OLD.Controllers
         public SnapMetadataController(SnapContext context)
         {
             _context = context;
-            
+
             if (_context.SnapMetadatas.Any()) return;
-            
-            _context.SnapMetadatas.Add(new SnapMetadata { Source = "EK80", Latitude = "432233", Longitude= "123456", Timestamp = DateTime.Now });
+
+            _context.SnapMetadatas.Add(new SnapMetadata { Source = "EK80", Latitude = "432233", Longitude = "123456", Timestamp = DateTime.Now });
             _context.SaveChanges();
 
         }
 
+
+        [HttpGet]
+        public Task<IActionResult> GetSnapMetadatas(
+            [FromServices] IGetSnapMetadatasCommand command,
+            [FromQuery] int ownerId,
+            CancellationToken cancellationToken) => command.ExecuteAsync(ownerId);
+
+        /*
         // GET: api/EchogramInfo
         [HttpGet]
         public async Task<IEnumerable<SnapMetadata>> GetEchogramInfos()
@@ -34,7 +44,15 @@ namespace Snapfish.API_OLD.Controllers
             return await _context.SnapMetadatas
                             //TODO: Check   .Include(e => e.OwnerId)
                             .ToListAsync ();
-        }
+        }*/
+
+        [HttpGet("{id}")]
+        public Task<IActionResult> GetSnapMetadata(
+            [FromServices] IGetSnapMetadatasCommand command,
+            [FromQuery] int ownerId,
+            CancellationToken cancellationToken) => command.ExecuteAsync(ownerId);
+
+
 
         // GET: api/EchogramInfo/5
         [HttpGet("{id}", Name = "Get")]
@@ -49,7 +67,7 @@ namespace Snapfish.API_OLD.Controllers
 
             return snap;
         }
-
+        
         // POST: api/SnapMetadata
         [HttpPost]
         public async Task<ActionResult<SnapMetadata>> PostSnapMetadata([FromBody] SnapMetadata metadata)

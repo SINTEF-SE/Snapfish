@@ -59,7 +59,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Commands" />
       <Folder Include="Mappers" />
       <Folder Include="Models" />
       <Folder Include="Repositories" />
