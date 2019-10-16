@@ -126,8 +126,12 @@ namespace Snapfish.API
                     this.hostingEnvironment.IsDevelopment(),
                     x => x.UseDeveloperErrorPages())
                 .UseStaticFilesWithCacheControl()
-                .UseMvc();
-                //.UseSwagger()
-                //.UseCustomSwaggerUI(); TODO: Peter fix swagger
+                .UseMvc()
+                .UseSwagger(
+                    options =>
+                    {
+                        options.PreSerializeFilters.Add((swaggerDoc, httpReq) => swaggerDoc.Host = httpReq.Host.Value);
+                    })
+                .UseCustomSwaggerUI();
     }
 }

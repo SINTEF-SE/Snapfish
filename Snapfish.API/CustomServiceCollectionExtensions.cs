@@ -255,7 +255,7 @@ namespace Snapfish.API
                     options.DescribeStringEnumsInCamelCase();
                     options.EnableAnnotations();
 
-                    // Add the XML comment file for this assembly, so it's contents can be displayed.
+                    // Add the XML comment file for this assembly, so its contents can be displayed.
                     options.IncludeXmlCommentsIfExists(assembly);
 
                     options.OperationFilter<ApiVersionOperationFilter>();
@@ -265,8 +265,6 @@ namespace Snapfish.API
 
                     // Show an example model for JsonPatchDocument<T>.
                     options.SchemaFilter<JsonPatchDocumentSchemaFilter>();
-                    // Show an example model for ModelStateDictionary.
-                    options.SchemaFilter<ModelStateDictionarySchemaFilter>();
 
                     var provider = services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
                     foreach (var apiVersionDescription in provider.ApiVersionDescriptions)
@@ -274,7 +272,9 @@ namespace Snapfish.API
                         var info = new Info()
                         {
                             Title = assemblyProduct,
-                            Description = apiVersionDescription.IsDeprecated ? $"{assemblyDescription} This API version has been deprecated." : assemblyDescription,
+                            Description = apiVersionDescription.IsDeprecated ?
+                                $"{assemblyDescription} This API version has been deprecated." :
+                                assemblyDescription,
                             Version = apiVersionDescription.ApiVersion.ToString(),
                         };
                         options.SwaggerDoc(apiVersionDescription.GroupName, info);
