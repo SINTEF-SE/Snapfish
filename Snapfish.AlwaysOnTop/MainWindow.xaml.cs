@@ -20,7 +20,7 @@ namespace Snapfish.AlwaysOnTop
     /// </summary>
     public partial class MainWindow
     {
-        public static SnapfishRecorder recorder = new SnapfishRecorder();
+        public static SnapfishRecorder recorder;
         public static Boolean recorderInitialized = false;
         public static SettingsContainer SettingsContainer = new SettingsContainer();
 
@@ -37,6 +37,7 @@ namespace Snapfish.AlwaysOnTop
                 MessageBox.Show("Invalid credentials. Please enter correct credentials in the settings menu");
                 return;
             }
+            recorder = new SnapfishRecorder(SettingsContainer.ekIpAddr);
             recorder.InstallDaemon();
             Thread.Sleep(500);
             recorder.CreateEchoSubscription();
@@ -51,7 +52,7 @@ namespace Snapfish.AlwaysOnTop
                 MessageBox.Show("Invalid credentials. Please enter correct credentials in the settings menu");
                 return null;
             }
-            recorder = new SnapfishRecorder();
+            recorder = new SnapfishRecorder(SettingsContainer.ekIpAddr);
             recorder.InstallDaemon();
             Thread.Sleep(7000);
             recorder.CreateEchoSubscription();
