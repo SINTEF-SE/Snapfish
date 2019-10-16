@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Snapfish.BL.Models;
+
 using Snapfish.API.Database;
+using Snapfish.BL.Models;
 
 namespace Snapfish.API.Controllers
 {
