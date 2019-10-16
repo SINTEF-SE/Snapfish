@@ -264,9 +264,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
         }
 
 
-        public void ConnectToRemoteEkDevice()
+        public void ConnectToRemoteEkDevice(string username="Simrad", string password="")
         {
-            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
+            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = ("Name:" + username + ";Password:" + password + "\0").ToCharArray()};
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
             client.BeginConnect(remoteEndpoint, ConnectCallback, client);
@@ -971,7 +971,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             Console.WriteLine(message);
 #endif
         }
-
+        
         #region PARAMETER_GETTERS
 
         public string ApplicationName => _applicationName;

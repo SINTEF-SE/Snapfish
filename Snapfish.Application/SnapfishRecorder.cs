@@ -57,7 +57,7 @@ namespace Snapfish.Application
             _daemon = new EkSeriesSocketDaemon(ipaddr);
         }
 
-        public void InstallDaemon()
+        public void InstallDaemon(string username="Simrad", string password="")
         {
             _daemon.HandshakeWithEkSeriesDevice();
             _daemon.ConnectToRemoteEkDevice();

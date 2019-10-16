@@ -37,8 +37,9 @@ namespace Snapfish.AlwaysOnTop
                 MessageBox.Show("Invalid credentials. Please enter correct credentials in the settings menu");
                 return;
             }
+
             recorder = new SnapfishRecorder(SettingsContainer.ekIpAddr);
-            recorder.InstallDaemon();
+            recorder.InstallDaemon(SettingsContainer.username, SettingsContainer.password);
             Thread.Sleep(500);
             recorder.CreateEchoSubscription();
             recorder.CreateBiomassSub();
@@ -52,8 +53,9 @@ namespace Snapfish.AlwaysOnTop
                 MessageBox.Show("Invalid credentials. Please enter correct credentials in the settings menu");
                 return null;
             }
+
             recorder = new SnapfishRecorder(SettingsContainer.ekIpAddr);
-            recorder.InstallDaemon();
+            recorder.InstallDaemon(SettingsContainer.username, SettingsContainer.password);
             Thread.Sleep(7000);
             recorder.CreateEchoSubscription();
             recorder.CreateBiomassSub();
