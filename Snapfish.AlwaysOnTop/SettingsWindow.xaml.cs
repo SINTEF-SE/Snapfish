@@ -14,8 +14,8 @@ namespace Snapfish.AlwaysOnTop
         
         public SettingsContainer SettingsInfo
         {
-            get { return (SettingsContainer) DataContext; }
-            set { DataContext = value; }
+            get => (SettingsContainer) DataContext;
+            set => DataContext = value;
         }
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)

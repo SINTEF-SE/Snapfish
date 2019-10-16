@@ -4,6 +4,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Snapfish.AlwaysOnTop"
+    xmlns:validationRules="clr-namespace:Snapfish.AlwaysOnTop.ValidationRules"
     Title="SettingsWindow"
     Height="190"
     x:Class="Snapfish.AlwaysOnTop.SettingsWindow"
@@ -62,9 +63,9 @@
         <Label Grid.Column="0" Grid.Row="0">IP address:</Label>
         <TextBox Name="ipAddressTextBox" Grid.Column="1" Grid.Row="0">
             <TextBox.Text>
-                <Binding Path="ipaddr" Source="SettingsWindow" UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="ekIpAddr" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
-                        <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
+                        <validationRules:IpValidation />
                     </Binding.ValidationRules>
                 </Binding>
             </TextBox.Text>
@@ -76,7 +77,7 @@
             <TextBox.Text>
                 <Binding Path="username" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
-                        <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
+                        <validationRules:NotEmptyStringValidation />
                     </Binding.ValidationRules>
                 </Binding>
             </TextBox.Text>
@@ -87,9 +88,6 @@
         <TextBox Name="EkDevicePasswordTextBox" Grid.Column="1" Grid.Row="2">
             <TextBox.Text>
                 <Binding Path="password" UpdateSourceTrigger="PropertyChanged">
-                    <Binding.ValidationRules>
-                        <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
-                    </Binding.ValidationRules>
                 </Binding>
             </TextBox.Text>
         </TextBox>
@@ -100,7 +98,7 @@
             <TextBox.Text>
                 <Binding Path="name" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
-                        <local:MarginValidationRule MinMargin="0" MaxMargin="10" />
+                        <validationRules:NotEmptyStringValidation />
                     </Binding.ValidationRules>
                 </Binding>
             </TextBox.Text>

@@ -141,9 +141,10 @@ namespace Snapfish.AlwaysOnTop
         private void ImageButton_Click(object sender, RoutedEventArgs e)
         {
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            var appSettings = ConfigurationManager.AppSettings;  
+            var appSettings = ConfigurationManager.AppSettings;
+            
             //Load from config if possible
-            SettingsContainer.ipaddr = appSettings["ipaddr"] ?? "Not found";
+            SettingsContainer.ekIpAddr = appSettings["ekIpAddr"] ?? "Not Set";
             SettingsContainer.username = appSettings["username"] ?? "Not found";
             SettingsContainer.password = appSettings["password"] ?? "Not found";
             SettingsContainer.name = appSettings["name"] ?? "Not found";
@@ -156,12 +157,18 @@ namespace Snapfish.AlwaysOnTop
             dlg.ShowDialog();
 
             // Process data entered by user if dialog box is accepted
+            var storeSettings = configuration.AppSettings;
             if (dlg.DialogResult == true)
             {
                 // For some reason validation doesnt work, no idea why
                 Debug.WriteLine(dlg.IpAdress);
                 SettingsContainer =  dlg.SettingsInfo;
-
+                storeSettings.Settings["ekIpAddr"].Value = SettingsContainer.ekIpAddr;
+                storeSettings.Settings["username"].Value = SettingsContainer.username;
+                storeSettings.Settings["password"].Value = SettingsContainer.password;
+                storeSettings.Settings["name"].Value = SettingsContainer.name;
+                configuration.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
             }
         }
     }
