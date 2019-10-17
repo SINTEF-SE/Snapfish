@@ -12,7 +12,7 @@ using Snapfish.API.Database;
 namespace Snapfish.API.Commands
 {
 
-    public interface IGetSnapMetadataCommand : IAsyncCommand<int, long>
+    public interface IGetSnapMetadataCommand : IAsyncCommand<long>
     {
     }
 
@@ -27,7 +27,7 @@ namespace Snapfish.API.Commands
             _snapContext = snapContext;
         }
 
-        public async Task<IActionResult> ExecuteAsync(int userID, long id, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ExecuteAsync(long id, CancellationToken cancellationToken = default)
         {
             var info = await _snapContext.SnapMetadatas
                     .FindAsync(id);

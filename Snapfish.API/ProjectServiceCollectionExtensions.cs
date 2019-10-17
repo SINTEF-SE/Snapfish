@@ -18,7 +18,11 @@ namespace Snapfish.API
     {
         public static IServiceCollection AddProjectCommands(this IServiceCollection services) =>
             services 
-                .AddSingleton<IGetSnapMetadatasCommand, GetSnapMetadatasCommand>();
+                .AddSingleton<IGetSnapMetadataCommand, GetSnapMetadataCommand>()
+                .AddSingleton<IGetSnapMetadatasCommand, GetSnapMetadatasCommand>()
+                .AddSingleton<IPostSnapMetadataCommand, PostSnapMetadataCommand>()
+                .AddSingleton<IDeleteSnapMetadataCommand, DeleteSnapMetadataCommand>()
+            ;
 
         public static IServiceCollection AddProjectMappers(this IServiceCollection services) =>
             services;

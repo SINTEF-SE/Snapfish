@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Snapfish.API</name>
+    </assembly>
+    <members>
+        <member name="M:Snapfish.API.ApplicationBuilderExtensions.UseDeveloperErrorPages(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Adds developer friendly error pages for the application which contain extra debug and exception information.
+            Note: It is unsafe to use this in production.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.ApplicationBuilderExtensions.UseStaticFilesWithCacheControl(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Uses the static files middleware to serve static files. Also adds the Cache-Control and Pragma HTTP
+            headers. The cache duration is controlled from configuration.
+            See http://andrewlock.net/adding-cache-control-headers-to-static-files-in-asp-net-core/.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.ApplicationBuilderExtensions.InitializeIdentityDatabase(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,SintefSecureBoilerplate.DAL.Identity.IdentityDatabaseContext)">
+            <summary>
+            Initializes the Identity database if it is not already initialized. If initialized, it binds the database to the application through dependency injection
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMetadataController.GetSnapMetadatas(Snapfish.API.Commands.IGetSnapMetadatasCommand,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get all the snap metadata entries for the specified owner
+            </summary>
+            <param name="ownerId">The unique identifier of the owner.</param>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMetadataController.GetSnapMetadata(Snapfish.API.Commands.IGetSnapMetadataCommand,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            Get the snap metadata entry with the specified unique identifier
+            </summary>
+            <param name="id">The unique identifier of the snap metadata entry.</param>
+            <response code="200">The snap metadata with the specified unique identifier was retrieved.</response>
+            <response code="404">No snap metadata entry with the specified identifier was found.</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMetadataController.PostSnapMetadata(Snapfish.API.Commands.IPostSnapMetadataCommand,Snapfish.BL.Models.SnapMetadata,System.Threading.CancellationToken)">
+            <summary>
+            Creates a snap metadata entry.
+            </summary>
+            <param name="command">The action command.</param>
+            <param name="metadata">The snap metadata entry to create.</param>
+            <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+            <returns>A 201 Created response containing the newly created snap metadata entry or a 400 Bad Request if the entry was
+            invalid.</returns>
+            <response code="201">Snap metadata entry was created</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMetadataController.Delete(Snapfish.API.Commands.IDeleteSnapMetadataCommand,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Deletes the snap metadata with the specified unique identifier.
+            </summary>
+            <param name="command">The action command.</param>
+            <param name="id">The unique identifier of the snap metadata.</param>
+            <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+            <returns>A 204 No Content response if the metadata was deleted or a 404 Not Found if metadata with the specified
+            unique identifier was not found.</returns>
+        </member>
+        <member name="T:Snapfish.API.Controllers.StatusController">
+            <summary>
+            The status of this API.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.Controllers.StatusController.GetStatus">
+            <summary>
+            Gets the status of this API and it's dependencies, giving an indication of it's health.
+            </summary>
+            <returns>A 200 OK or error response containing details of what is wrong.</returns>
+        </member>
+        <member name="T:Snapfish.API.CustomServiceCollectionExtensions">
+            <summary>
+            <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> extension methods which extend ASP.NET Core services.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomCaching(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures caching for the application. Registers the <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/> and
+            <see cref="T:Microsoft.Extensions.Caching.Memory.IMemoryCache"/> types with the services collection or IoC container. The
+            <see cref="T:Microsoft.Extensions.Caching.Distributed.IDistributedCache"/> is intended to be used in cloud hosted scenarios where there is a shared
+            cache, which is shared between multiple instances of the application. Use the <see cref="T:Microsoft.Extensions.Caching.Memory.IMemoryCache"/>
+            otherwise.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomOptions(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures the settings by binding the contents of the appsettings.json file to the specified Plain Old CLR
+            Objects (POCO) and adding <see cref="T:Microsoft.Extensions.Options.IOptions`1"/> objects to the services collection.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomResponseCompression(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds dynamic response compression to enable GZIP compression of responses. This is turned off for HTTPS
+            requests by default to avoid the BREACH security vulnerability.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddIdentityDataStores(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds the identity database context and ties the default token providers to the database table(s)
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomRouting(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Add custom routing settings which determines how URL's are generated.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomStrictTransportSecurity(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds the Strict-Transport-Security HTTP header to responses. This HTTP header is only relevant if you are
+            using TLS. It ensures that content is loaded over HTTPS and refuses to connect in case of certificate
+            errors and warnings.
+            See https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security and
+            http://www.troyhunt.com/2015/06/understanding-http-strict-transport.html
+            Note: Including subdomains and a minimum maxage of 18 weeks is required for preloading.
+            Note: You can refer to the following article to clear the HSTS cache in your browser:
+            http://classically.me/blogs/how-clear-hsts-settings-major-browsers
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.CustomServiceCollectionExtensions.AddCustomSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds Swagger services and configures the Swagger services.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.MvcCoreBuilderExtensions.AddCustomCors(Microsoft.Extensions.DependencyInjection.IMvcCoreBuilder)">
+            <summary>
+            Add cross-origin resource sharing (CORS) services and configures named CORS policies. See
+            https://docs.asp.net/en/latest/security/cors.html
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.MvcCoreBuilderExtensions.AddCustomJsonOptions(Microsoft.Extensions.DependencyInjection.IMvcCoreBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+            <summary>
+            Adds customized JSON serializer settings.
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.OperationFilters.CorrelationIdOperationFilter">
+            <summary>
+            Adds a Swashbuckle <see cref="T:Swashbuckle.AspNetCore.Swagger.NonBodyParameter"/> to all operations with a description of the X-Correlation-ID
+            HTTP header and a default GUID value.
+            </summary>
+            <seealso cref="T:Swashbuckle.AspNetCore.SwaggerGen.IOperationFilter" />
+        </member>
+        <member name="M:Snapfish.API.OperationFilters.CorrelationIdOperationFilter.Apply(Swashbuckle.AspNetCore.Swagger.Operation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies the specified operation.
+            </summary>
+            <param name="operation">The operation.</param>
+            <param name="context">The context.</param>
+        </member>
+        <member name="T:Snapfish.API.Options.ApplicationOptions">
+            <summary>
+            All options for the application.
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.Options.CacheProfileOptions">
+            <summary>
+            The caching options for the application.
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.Options.CompressionOptions">
+            <summary>
+            The dynamic response compression options for the application.
+            </summary>
+        </member>
+        <member name="P:Snapfish.API.Options.CompressionOptions.MimeTypes">
+            <summary>
+            Gets or sets a list of MIME types to be compressed in addition to the default set used by ASP.NET Core.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.Program.ConfigureKestrelServerLimits(Microsoft.AspNetCore.Hosting.WebHostBuilderContext,Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions)">
+            <summary>
+            Configure Kestrel server limits from appsettings.json is not supported. So we manually copy them from config.
+            See https://github.com/aspnet/KestrelHttpServer/issues/2216
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.ProjectServiceCollectionExtensions">
+            <summary>
+            <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> extension methods add project services.
+            </summary>
+            <remarks>
+            AddSingleton - Only one instance is ever created and returned.
+            AddScoped - A new instance is created and returned for each request/response cycle.
+            AddTransient - A new instance is created and returned each time.
+            </remarks>
+        </member>
+        <member name="T:Snapfish.API.Services.ClockService">
+            <summary>
+            Retrieves the current time. Helps with unit testing by letting you mock the system clock.
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.Services.IClockService">
+            <summary>
+            Retrieves the current time. Helps with unit testing by letting you mock the system clock.
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.Settings.CacheProfileSettings">
+            <summary>
+            The caching settings for the application.
+            </summary>
+        </member>
+        <member name="P:Snapfish.API.Settings.CacheProfileSettings.CacheProfiles">
+            <summary>
+            Gets or sets the cache profiles (How long to cache things for).
+            </summary>
+        </member>
+        <member name="T:Snapfish.API.Startup">
+            <summary>
+            The main start-up class for the application.
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Snapfish.API.Startup"/> class.
+            </summary>
+            <param name="configuration">The application configuration, where key value pair settings are stored. See
+            http://docs.asp.net/en/latest/fundamentals/configuration.html</param>
+            <param name="hostingEnvironment">The environment the application is running under. This can be Development,
+            Staging or Production by default. See http://docs.asp.net/en/latest/fundamentals/environments.html</param>
+        </member>
+        <member name="M:Snapfish.API.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures the services to add to the ASP.NET Core Injection of Control (IoC) container. This method gets
+            called by the ASP.NET runtime. See
+            http://blogs.msdn.com/b/webdev/archive/2014/06/17/dependency-injection-in-asp-net-vnext.aspx
+            </summary>
+        </member>
+        <member name="M:Snapfish.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Configures the application and HTTP request pipeline. Configure is called after ConfigureServices is
+            called by the ASP.NET runtime.
+            </summary>
+        </member>
+    </members>
+</doc>
