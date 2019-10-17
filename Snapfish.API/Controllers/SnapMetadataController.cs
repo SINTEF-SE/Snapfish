@@ -24,12 +24,6 @@ namespace Snapfish.API.Controllers
         public SnapMetadataController(SnapContext context)
         {
             _context = context;
-
-            if (_context.SnapMetadatas.Any()) return;
-
-            _context.SnapMetadatas.Add(new SnapMetadata { Source = "EK80", Latitude = "432233", Longitude = "123456", Timestamp = DateTime.Now });
-            _context.SaveChanges();
-
         }
 
 
@@ -43,15 +37,6 @@ namespace Snapfish.API.Controllers
             [FromQuery] int ownerId,
             CancellationToken cancellationToken) => command.ExecuteAsync(ownerId);
 
-        /*
-        // GET: api/EchogramInfo
-        [HttpGet]
-        public async Task<IEnumerable<SnapMetadata>> GetEchogramInfos()
-        {
-            return await _context.SnapMetadatas
-                            //TODO: Check   .Include(e => e.OwnerId)
-                            .ToListAsync ();
-        }*/
 
         /// <summary>
         /// Get the snap metadata entry with the specified unique identifier
@@ -68,24 +53,6 @@ namespace Snapfish.API.Controllers
             CancellationToken cancellationToken) => command.ExecuteAsync(id);
 
 
-        /*
-        // GET: api/EchogramInfo/5
-        [HttpGet("{id}", Name = "Get")]
-        public async Task<ActionResult<SnapMetadata>> GetEchogramInfo(long id)
-        {
-            var snap = await _context.SnapMetadatas.FindAsync(id);
-
-            if (snap == null)
-            {
-                return NotFound();
-            }
-
-            return snap;
-        }
-        */
-
-
-
         /// <summary>
         /// Creates a snap metadata entry.
         /// </summary>
@@ -94,7 +61,7 @@ namespace Snapfish.API.Controllers
         /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
         /// <returns>A 201 Created response containing the newly created snap metadata entry or a 400 Bad Request if the entry was
         /// invalid.</returns>
-        /// <response code="201">Snap metadata entry was created</response>
+        /// <response code="201">Snap metadata entry was successfully created</response>
         [HttpPost]
         [ProducesResponseType(typeof(SnapMetadata), 201)]
         //[SwaggerResponse(StatusCodes.Status201Created, "The snap metadata entry was created.", typeof(SnapMetadata))]
@@ -103,68 +70,6 @@ namespace Snapfish.API.Controllers
             [FromServices] IPostSnapMetadataCommand command,
             [FromBody] SnapMetadata metadata,
             CancellationToken cancellationToken) => command.ExecuteAsync(metadata);
-
-        /*
-        // POST: api/SnapMetadata
-        [HttpPost]
-        public async Task<ActionResult<SnapMetadata>> PostSnapMetadata([FromBody] SnapMetadata metadata)
-        {
-            _context.SnapMetadatas.Add(metadata);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetSnapMetadata), new { id = metadata.Id }, metadata);
-        }*/
-        /*        
-                //TODO: REMOVE ME ONLY FOR DEMO, LETS DO THIS SAFELY TO ENSURE NO FUCK UPS
-                [HttpPost]
-                public async Task<ActionResult<int>> PostEchogramInfo(int id)
-                {
-                    System.Console.WriteLine("post received in echograminfoscontroller");
-                    EchogramInfo infoClass = new EchogramInfo();
-                //    switch (id)
-        //            {
-          //              case 1:
-                            //infoClass.ID = 15;
-                            infoClass.Latitude = "632468";
-                            infoClass.Longitude = "116306";
-                            infoClass.Source = "Kanonbåtens EK80";
-                            infoClass.EchogramUrl = "https://10.218.87.81:5006/test/index.html";
-                            infoClass.Timestamp = DateTime.Now;
-                            infoClass.Biomass = "341";
-                            infoClass.OwnerID = 2;
-                            break;
-                        case 2:
-                            //infoClass.ID = 16;
-                            infoClass.Latitude = "632468";
-                            infoClass.Longitude = "116306";
-                            infoClass.Source = "Kanonbåtens EK80";
-                            infoClass.EchogramUrl = "https://10.218.87.81:5006/test/index.html";
-                            infoClass.Timestamp = DateTime.Now;
-                            infoClass.Biomass = "341";
-                            break;
-                        case 3:
-                            //infoClass.ID = 17;
-                            infoClass.Latitude = "632468";
-                            infoClass.Longitude = "116306";
-                            infoClass.Source = "Kanonbåtens EK80";
-                            infoClass.EchogramUrl = "https://10.218.87.81:5006/test/index.html";
-                            infoClass.Timestamp = DateTime.Now;
-                            infoClass.Biomass = "341";
-                            break;
-                    }
-
-                    _context.EchogramInfos.Add(infoClass);
-                    await _context.SaveChangesAsync();
-                    return CreatedAtAction(nameof(GetEchogramInfo), new { id = infoClass.ID }, infoClass);
-                }
-        */
-
-        /*
-        // PUT: api/EchogramInfo/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }*/
 
 
         /// <summary>
@@ -183,22 +88,5 @@ namespace Snapfish.API.Controllers
             int id,
             CancellationToken cancellationToken) => command.ExecuteAsync(id);
 
-/*
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEchogramInfo(long id)
-        {
-            var echogramInfo = await _context.SnapMetadatas.FindAsync(id);
-
-            if (echogramInfo == null)
-            {
-                return NotFound();
-            }
-
-            _context.SnapMetadatas.Remove(echogramInfo);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }*/
     }
 }
