@@ -22,11 +22,67 @@
             Initializes the Identity database if it is not already initialized. If initialized, it binds the database to the application through dependency injection
             </summary>
         </member>
+        <member name="M:Snapfish.API.Controllers.SnapController.GetSnap(Snapfish.API.Commands.IGetSnapCommand,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            Get the snap with the specified unique identifier
+            </summary>
+            <param name="id">The unique identifier of the snap.</param>
+            <response code="200">The snap with the specified unique identifier was retrieved.</response>
+            <response code="404">No snap with the specified identifier was found.</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapController.PostSnap(Snapfish.API.Commands.IPostSnapCommand,Snapfish.BL.Models.SnapPacket,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new snap with a snap metadata entry.
+            </summary>
+            <param name="command">The action command.</param>
+            <param name="snap">The snap packet containing the snap and metadata for the entry to create.</param>
+            <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+            <response code="201">Snap and snap metadata entry was successfully created</response>
+            <response code="400">The snap packet was invalid and no snap or snap metadata entry could be created</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.GetSnapMetadatas(Snapfish.API.Commands.IGetSnapMessagesCommand,System.Threading.CancellationToken,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Get all the snap messages for the specified user
+            </summary>
+            <param name="userId">The unique identifier of the user.</param>
+            <response code="200">All snap messages of the specified user was retrieved.</response>
+            <response code="404">The specified user was not found.</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.GetSnapMessage(Snapfish.API.Commands.IGetSnapMessageCommand,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            Get the snap message with the specified unique identifier
+            </summary>
+            <param name="id">The unique identifier of the snap message entry.</param>
+            <response code="200">The snap message with the specified unique identifier was retrieved.</response>
+            <response code="404">No snap message with the specified identifier was found.</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.PostSnapmessage(Snapfish.API.Commands.IPostSnapMessageCommand,Snapfish.BL.Models.SnapMessage,System.Threading.CancellationToken)">
+            <summary>
+            Creates a snap message for a list of recipients.
+            </summary>
+            <param name="command">The action command.</param>
+            <param name="message">The snap message to create.</param>
+            <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+            <response code="201">Snap message entry was successfully created</response>
+            <response code="400">The snap message was invalid and no entry could be created</response>
+        </member>
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.Delete(Snapfish.API.Commands.IDeleteSnapMessageCommand,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Deletes the snap message with the specified unique identifier.
+            </summary>
+            <param name="command">The action command.</param>
+            <param name="id">The unique identifier of the snap message.</param>
+            <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+            <response code="204">The snap message with the specified unique identifier was deleted.</response>
+            <response code="404">No snap message entry with the specified identifier was found.</response>
+        </member>
         <member name="M:Snapfish.API.Controllers.SnapMetadataController.GetSnapMetadatas(Snapfish.API.Commands.IGetSnapMetadatasCommand,System.Int32,System.Threading.CancellationToken)">
             <summary>
             Get all the snap metadata entries for the specified owner
             </summary>
             <param name="ownerId">The unique identifier of the owner.</param>
+            <response code="200">All snap metadata owned by the specified user was retrieved.</response>
+            <response code="404">The specified user was not found.</response>
         </member>
         <member name="M:Snapfish.API.Controllers.SnapMetadataController.GetSnapMetadata(Snapfish.API.Commands.IGetSnapMetadataCommand,System.Int64,System.Threading.CancellationToken)">
             <summary>
@@ -43,9 +99,8 @@
             <param name="command">The action command.</param>
             <param name="metadata">The snap metadata entry to create.</param>
             <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-            <returns>A 201 Created response containing the newly created snap metadata entry or a 400 Bad Request if the entry was
-            invalid.</returns>
-            <response code="201">Snap metadata entry was created</response>
+            <response code="201">Snap metadata entry was successfully created</response>
+            <response code="400">The snap metadata was invalid and no entry could be created</response>
         </member>
         <member name="M:Snapfish.API.Controllers.SnapMetadataController.Delete(Snapfish.API.Commands.IDeleteSnapMetadataCommand,System.Int32,System.Threading.CancellationToken)">
             <summary>
@@ -54,8 +109,8 @@
             <param name="command">The action command.</param>
             <param name="id">The unique identifier of the snap metadata.</param>
             <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-            <returns>A 204 No Content response if the metadata was deleted or a 404 Not Found if metadata with the specified
-            unique identifier was not found.</returns>
+            <response code="204">The snap metadata with the specified unique identifier was deleted.</response>
+            <response code="404">No snap metadata entry with the specified identifier was found.</response>
         </member>
         <member name="T:Snapfish.API.Controllers.StatusController">
             <summary>

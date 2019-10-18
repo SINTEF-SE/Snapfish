@@ -12,16 +12,16 @@ using Snapfish.API.Database;
 namespace Snapfish.API.Commands
 {
 
-    public interface IGetSnapMetadataCommand : IAsyncCommand<long>
+    public interface IGetSnapCommand : IAsyncCommand<long>
     {
     }
 
-    public class GetSnapMetadataCommand : IGetSnapMetadataCommand
+    public class GetSnapCommand : IGetSnapCommand
     {
         private readonly IActionContextAccessor _actionContextAccessor;
         private readonly SnapContext _snapContext;
 
-        public GetSnapMetadataCommand(IActionContextAccessor actionContextAccessor, SnapContext snapContext)
+        public GetSnapCommand(IActionContextAccessor actionContextAccessor, SnapContext snapContext)
         {
             _actionContextAccessor = actionContextAccessor;
             _snapContext = snapContext;
@@ -29,7 +29,7 @@ namespace Snapfish.API.Commands
 
         public async Task<IActionResult> ExecuteAsync(long id, CancellationToken cancellationToken = default)
         {
-            var info = await _snapContext.SnapMetadatas
+            var info = await _snapContext.Snaps
                     .FindAsync(id);
 
             //TODO: Add check for access right (either as owner, snap receier, or public)

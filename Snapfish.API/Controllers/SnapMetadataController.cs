@@ -31,7 +31,11 @@ namespace Snapfish.API.Controllers
         /// Get all the snap metadata entries for the specified owner
         /// </summary>
         /// <param name="ownerId">The unique identifier of the owner.</param>
+        /// <response code="200">All snap metadata owned by the specified user was retrieved.</response>
+        /// <response code="404">The specified user was not found.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(SnapMetadata), 200)]
+        [ProducesResponseType(404)]
         public Task<IActionResult> GetSnapMetadatas(
             [FromServices] IGetSnapMetadatasCommand command,
             [FromQuery] int ownerId,
@@ -59,13 +63,11 @@ namespace Snapfish.API.Controllers
         /// <param name="command">The action command.</param>
         /// <param name="metadata">The snap metadata entry to create.</param>
         /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-        /// <returns>A 201 Created response containing the newly created snap metadata entry or a 400 Bad Request if the entry was
-        /// invalid.</returns>
         /// <response code="201">Snap metadata entry was successfully created</response>
+        /// <response code="400">The snap metadata was invalid and no entry could be created</response>
         [HttpPost]
         [ProducesResponseType(typeof(SnapMetadata), 201)]
-        //[SwaggerResponse(StatusCodes.Status201Created, "The snap metadata entry was created.", typeof(SnapMetadata))]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "The snap metadata entry was invalid.", typeof(ModelStateDictionary))]
+        [ProducesResponseType(typeof(ModelStateDictionary), 400)]
         public Task<IActionResult> PostSnapMetadata(
             [FromServices] IPostSnapMetadataCommand command,
             [FromBody] SnapMetadata metadata,
@@ -78,11 +80,11 @@ namespace Snapfish.API.Controllers
         /// <param name="command">The action command.</param>
         /// <param name="id">The unique identifier of the snap metadata.</param>
         /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-        /// <returns>A 204 No Content response if the metadata was deleted or a 404 Not Found if metadata with the specified
-        /// unique identifier was not found.</returns>
+        /// <response code="204">The snap metadata with the specified unique identifier was deleted.</response>
+        /// <response code="404">No snap metadata entry with the specified identifier was found.</response>
         [HttpDelete("{id}")]
-        [SwaggerResponse(StatusCodes.Status204NoContent, "The snap metadata with the specified unique identifier was deleted.")]
-        [SwaggerResponse(StatusCodes.Status404NotFound, "No snap metadata with the specified unique identifier was found.")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
         public Task<IActionResult> Delete(
             [FromServices] IDeleteSnapMetadataCommand command,
             int id,

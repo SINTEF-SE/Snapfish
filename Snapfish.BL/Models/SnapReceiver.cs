@@ -11,7 +11,9 @@ namespace Snapfish.BL.Models
         public long SnapMessageID { get; set; }
         public long SnapUserID { get; set; }
 
-        // TODO: Add status: unread, read, deleted
+        //public bool Seen { get; set; }
+
+        //public bool Deleted { get; set; }
 
         // [NotMapped]
         public string ReceiverEmail { get; set; }

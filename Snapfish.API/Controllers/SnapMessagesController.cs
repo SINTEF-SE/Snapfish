@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-
+using Snapfish.API.Commands;
 using Snapfish.API.Database;
 using Snapfish.BL.Models;
 
@@ -21,6 +23,75 @@ namespace Snapfish.API.Controllers
         {
             _context = context;
         }
+
+
+        /// <summary>
+        /// Get all the snap messages for the specified user
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <response code="200">All snap messages of the specified user was retrieved.</response>
+        /// <response code="404">The specified user was not found.</response>
+        [HttpGet]
+        [ProducesResponseType(typeof(SnapMessage), 200)]
+        [ProducesResponseType(404)]
+        public Task<IActionResult> GetSnapMetadatas(
+            [FromServices] IGetSnapMessagesCommand command,
+            CancellationToken cancellationToken,
+            [FromQuery] int userId,
+            [FromQuery] bool withEchogram = false,             
+            [FromQuery] bool withReceivers = true) => command.ExecuteAsync(userId, withEchogram, withReceivers);
+
+
+        /// <summary>
+        /// Get the snap message with the specified unique identifier
+        /// </summary>
+        /// <param name="id">The unique identifier of the snap message entry.</param>
+        /// <response code="200">The snap message with the specified unique identifier was retrieved.</response>
+        /// <response code="404">No snap message with the specified identifier was found.</response>
+        [HttpGet("{id}", Name = nameof(GetSnapMessage))]
+        [ProducesResponseType(typeof(SnapMessage), 200)]
+        [ProducesResponseType(404)]
+        public Task<IActionResult> GetSnapMessage(
+            [FromServices] IGetSnapMessageCommand command,
+            long id,
+            CancellationToken cancellationToken) => command.ExecuteAsync(id);
+
+
+        /// <summary>
+        /// Creates a snap message for a list of recipients.
+        /// </summary>
+        /// <param name="command">The action command.</param>
+        /// <param name="message">The snap message to create.</param>
+        /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+        /// <response code="201">Snap message entry was successfully created</response>
+        /// <response code="400">The snap message was invalid and no entry could be created</response>
+        [HttpPost]
+        [ProducesResponseType(typeof(SnapMessage), 201)]
+        [ProducesResponseType(typeof(ModelStateDictionary), 400)]
+        public Task<IActionResult> PostSnapmessage(
+            [FromServices] IPostSnapMessageCommand command,
+            [FromBody] SnapMessage message,
+            CancellationToken cancellationToken) => command.ExecuteAsync(message);
+
+
+        /// <summary>
+        /// Deletes the snap message with the specified unique identifier.
+        /// </summary>
+        /// <param name="command">The action command.</param>
+        /// <param name="id">The unique identifier of the snap message.</param>
+        /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
+        /// <response code="204">The snap message with the specified unique identifier was deleted.</response>
+        /// <response code="404">No snap message entry with the specified identifier was found.</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public Task<IActionResult> Delete(
+            [FromServices] IDeleteSnapMessageCommand command,
+            int id,
+            CancellationToken cancellationToken) => command.ExecuteAsync(id);
+
+
+/*
 
         // GET: api/SnapMessage
         [HttpGet]
@@ -99,7 +170,7 @@ namespace Snapfish.API.Controllers
 
             return CreatedAtAction(nameof(GetSnapMessage), new { id = item.ID }, item);
         }
-
+        */
         // PUT: api/SnapMessage/5
         /*
         [HttpPut("{id}")]
@@ -107,7 +178,7 @@ namespace Snapfish.API.Controllers
         {
         }
         */
-
+        /*
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItem(long id)
@@ -123,6 +194,6 @@ namespace Snapfish.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
+        }*/
     }
 }
