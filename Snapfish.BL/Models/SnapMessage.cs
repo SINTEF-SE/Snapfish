@@ -9,16 +9,15 @@ namespace Snapfish.BL.Models
     public class SnapMessage
     {
         public long ID { get; set; }
+        public long OwnerID { get; set; }
         public long SenderID { get; set; }
-        public string SenderEmail { get; set; }
-        public string Title { get; set; }
-        public string Comment { get; set; }
-        public DateTime SendTimestamp { get; set; }
-        public bool SharePublicly { get; set; }
-        public long EchogramInfoID { get; set; }
+        public string ReceiverEmails { get; set; }
+        public string Message { get; set; }
+        public DateTime SentTimestamp { get; set; }
+        public long SnapMetadataID { get; set; }
+        public bool Seen { get; set; }
 
-        public SnapMetadata EchogramInfo { get; set; }
+        public SnapMetadata SnapMetadata { get; set; }
         public SnapUser Sender { get; set; }
-        public List<SnapReceiver> Receivers { get; set; }
     }
 }

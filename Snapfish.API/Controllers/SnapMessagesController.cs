@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Snapfish.API.Commands;
 using Snapfish.API.Database;
+using Snapfish.API.ViewModels;
 using Snapfish.BL.Models;
 
 namespace Snapfish.API.Controllers
@@ -29,17 +30,19 @@ namespace Snapfish.API.Controllers
         /// Get all the snap messages for the specified user
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
-        /// <response code="200">All snap messages of the specified user was retrieved.</response>
+        /// <param name="inbox">Specifies whether to retrieve the inbox or outbox messages of the user.</param>
+        /// <param name="snapmetadata">Whether to include the snap metadata as part of the retrieve messages.</param>
+        /// <response code="200">All snap messages in the inbox or outbox of the specified user was retrieved.</response>
         /// <response code="404">The specified user was not found.</response>
         [HttpGet]
         [ProducesResponseType(typeof(SnapMessage), 200)]
         [ProducesResponseType(404)]
-        public Task<IActionResult> GetSnapMetadatas(
+        public Task<IActionResult> GetSnapMessages(
             [FromServices] IGetSnapMessagesCommand command,
             CancellationToken cancellationToken,
             [FromQuery] int userId,
-            [FromQuery] bool withEchogram = false,             
-            [FromQuery] bool withReceivers = true) => command.ExecuteAsync(userId, withEchogram, withReceivers);
+            [FromQuery] bool inbox = true,
+            [FromQuery] bool snapmetadata = false) => command.ExecuteAsync(userId, inbox, snapmetadata);
 
 
         /// <summary>
@@ -63,14 +66,14 @@ namespace Snapfish.API.Controllers
         /// <param name="command">The action command.</param>
         /// <param name="message">The snap message to create.</param>
         /// <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-        /// <response code="201">Snap message entry was successfully created</response>
+        /// <response code="201">Snap message entry was successfully created. The new outbox entry for the message is returned.</response>
         /// <response code="400">The snap message was invalid and no entry could be created</response>
         [HttpPost]
         [ProducesResponseType(typeof(SnapMessage), 201)]
         [ProducesResponseType(typeof(ModelStateDictionary), 400)]
         public Task<IActionResult> PostSnapmessage(
             [FromServices] IPostSnapMessageCommand command,
-            [FromBody] SnapMessage message,
+            [FromBody] SnapMessageDraft message,
             CancellationToken cancellationToken) => command.ExecuteAsync(message);
 
 

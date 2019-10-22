@@ -12,13 +12,13 @@ namespace Snapfish.API.Database
         public DbSet<SnapUser> SnapUsers { get; set; }
         public DbSet<SnapMessage> SnapMessages { get; set; }
         public DbSet<SnapMetadata> SnapMetadatas { get; set; }
-        public DbSet<SnapReceiver> SnapReceivers { get; set; }
+        public DbSet<SnapTag> SnapTags { get; set; }
         public DbSet<Snap> Snaps { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SnapReceiver>()
-                .HasKey(r => new { r.SnapMessageID, r.SnapUserID });
+//            modelBuilder.Entity<SnapReceiver>()
+ //               .HasKey(r => new { r.SnapMessageID, r.SnapUserID });
         }
         
     }

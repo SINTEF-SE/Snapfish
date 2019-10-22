@@ -9,12 +9,13 @@ using Microsoft.EntityFrameworkCore;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using Snapfish.API.Controllers;
 using Snapfish.API.Database;
+using Snapfish.API.ViewModels;
 using Snapfish.BL.Models;
 
 namespace Snapfish.API.Commands
 {
 
-    public interface IPostSnapMessageCommand : IAsyncCommand<SnapMessage>
+    public interface IPostSnapMessageCommand : IAsyncCommand<SnapMessageDraft>
     {
     }
 
@@ -29,38 +30,68 @@ namespace Snapfish.API.Commands
             _snapContext = snapContext;
         }
 
-  
-        public async Task<IActionResult> ExecuteAsync(SnapMessage message, CancellationToken cancellationToken = default)
+
+        public async Task<IActionResult> ExecuteAsync(SnapMessageDraft messageDraft, CancellationToken cancellationToken = default)
         {
-            message.ID = 0;
-            message.EchogramInfo = null;
-            message.SendTimestamp = DateTime.Now;
+            DateTime stamp = DateTime.Now;
 
             // Look up sender
-            SnapUser sendingUser = _snapContext.SnapUsers.Where(s => s.Email == message.SenderEmail).First();
+            SnapUser sendingUser = _snapContext.SnapUsers.Where(s => s.Email == messageDraft.SenderEmail).First();
+            SnapMessage sendersMessage;
             if (sendingUser != null)
             {
-                message.SenderID = sendingUser.ID;
+                var message = new SnapMessage
+                {
+                    OwnerID = sendingUser.ID,
+                    SenderID = sendingUser.ID,
+                    ReceiverEmails = messageDraft.ReceiverEmails,
+                    Message = messageDraft.Message,
+                    SentTimestamp = stamp,
+                    Seen = false,
+                    SnapMetadataID = messageDraft.SnapMetadataID
+                };
+                sendersMessage = message;
+                await _snapContext.SnapMessages.AddAsync(message);
+
             } else
             {
                 return new BadRequestResult();
             }
 
+            char[] separators = new char[] { ',' };
+            string[] receiverEmails = messageDraft.ReceiverEmails.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+
+            int foundReceivers = 0;
             // Look up receivers
-            foreach (SnapReceiver receiver in message.Receivers)
+            foreach (string receiverEmail in receiverEmails)
             {
-                SnapUser user = _snapContext.SnapUsers.Where(s => s.Email == receiver.ReceiverEmail).First();
+                SnapUser user = _snapContext.SnapUsers.Where(s => s.Email == receiverEmail.Trim()).First();
                 if (user != null)
                 {
-                    receiver.SnapUserID = user.ID;
+                    var message = new SnapMessage
+                    {
+                        OwnerID = user.ID,
+                        SenderID = sendingUser.ID,
+                        ReceiverEmails = messageDraft.ReceiverEmails,
+                        Message = messageDraft.Message,
+                        SentTimestamp = stamp,
+                        Seen = false,
+                        SnapMetadataID = messageDraft.SnapMetadataID
+                    };
+                    await _snapContext.SnapMessages.AddAsync(message);
+
+                    foundReceivers++;
                 }
                 // TODO: consider what to do if one of the receivers were not found
             }
+            // Have to be at least one legal receiver
+            if (foundReceivers == 0)
+            {
+                return new BadRequestResult();
+            }
 
-            await _snapContext.SnapMessages.AddAsync(message);
             await _snapContext.SaveChangesAsync();
-
-            return new CreatedAtRouteResult(nameof(SnapMessagesController.GetSnapMessage), new { id = message.ID }, message); 
+            return new CreatedAtRouteResult(nameof(SnapMessagesController.GetSnapMessage), new { id = sendersMessage.ID }, sendersMessage); 
         }
     }
 }

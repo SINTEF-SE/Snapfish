@@ -28,38 +28,47 @@ namespace Snapfish.API.Commands
             _snapContext = snapContext;
         }
 
-        public async Task<IActionResult> ExecuteAsync(int userID, bool withEchogram, bool withReceivers, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ExecuteAsync(int userID, bool inbox,  bool snapmetadata, CancellationToken cancellationToken = default)
         {
-
             List<SnapMessage> messages = null;
 
-            if (withReceivers && withEchogram)
-            {
-                messages = await _snapContext.SnapMessages
-                                .Include(s => s.EchogramInfo)
-                                .Include(s => s.Sender)
-                                .Include(s => s.Receivers)
-                                .ToListAsync();
-            } else if (withEchogram)
-            {
-                messages = await _snapContext.SnapMessages
-                                .Include(s => s.EchogramInfo)
-                                .Include(s => s.Sender)
-                                .ToListAsync();
-            } else if (withReceivers) 
-            {
-                messages = await _snapContext.SnapMessages
-                                .Include(s => s.Sender)
-                                .Include(s => s.Receivers)
-                                .ToListAsync();
-            } else
-            {
-                messages = await _snapContext.SnapMessages
-                                .Include(s => s.Sender)
-                                .ToListAsync();
-            }
 
-            // TODO: add filter on user?                            .Where(message => message.OwnerId == userID)
+            if (inbox)
+            {
+                if (snapmetadata)
+                {
+                    messages = await _snapContext.SnapMessages
+                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID != userID))
+                                .Include(s => s.SnapMetadata)
+                                .Include(s => s.Sender)
+                                .ToListAsync();
+                } else
+                {
+                    messages = await _snapContext.SnapMessages
+                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID != userID))
+                        .Include(s => s.Sender)
+                        .ToListAsync();
+
+                }
+            } else
+            {   // outbox
+                if (snapmetadata)
+                {
+                    messages = await _snapContext.SnapMessages
+                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID == userID))
+                                .Include(s => s.SnapMetadata)
+                                .Include(s => s.Sender)
+                                .ToListAsync();
+                }
+                else
+                {
+                    messages = await _snapContext.SnapMessages
+                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID == userID))
+                        .Include(s => s.Sender)
+                        .ToListAsync();
+
+                }
+            }
 
             if (messages == null)
                 return new NotFoundResult();

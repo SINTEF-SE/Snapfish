@@ -56,7 +56,7 @@
             <response code="200">The snap message with the specified unique identifier was retrieved.</response>
             <response code="404">No snap message with the specified identifier was found.</response>
         </member>
-        <member name="M:Snapfish.API.Controllers.SnapMessagesController.PostSnapmessage(Snapfish.API.Commands.IPostSnapMessageCommand,Snapfish.BL.Models.SnapMessage,System.Threading.CancellationToken)">
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.PostSnapmessage(Snapfish.API.Commands.IPostSnapMessageCommand,Snapfish.API.ViewModels.SnapMessageDraft,System.Threading.CancellationToken)">
             <summary>
             Creates a snap message for a list of recipients.
             </summary>
