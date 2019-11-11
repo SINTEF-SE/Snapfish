@@ -105,7 +105,7 @@ namespace Snapfish.AlwaysOnTop
                     new KeyValuePair<string, string>("id", "1"),
                 });
 
-                var result = await client.PostAsync("http://10.218.69.76:5002/api/EchogramInfos/", postTableContent);
+                var result = await client.PostAsync("http://esushi.no:37789/api/EchogramInfos/", postTableContent);
                 string resultContent = await result.Content.ReadAsStringAsync();
                 retval = resultContent;
                 Console.WriteLine(retval);
@@ -155,7 +155,7 @@ namespace Snapfish.AlwaysOnTop
                 var stringContent = new StringContent(json, UnicodeEncoding.UTF8, "application/json");
 
 //                var result = await client.PostAsync("http://10.218.157.115:5002/api/Snap/", stringContent);
-                var result = await client.PostAsync("http://localhost:5000/api/Snap/", stringContent);
+                var result = await client.PostAsync("http://esushi.no:37789/api/Snap/", stringContent);
                 // var resultContent = await result.Content.ReadAsStringAsync();
                 Console.WriteLine("Snap posted to API. Response code from API: " + result.StatusCode);
             }
