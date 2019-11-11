@@ -227,7 +227,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
         }
 
         public void HandshakeWithEkSeriesDevice()
-        {
+         {
             Console.WriteLine("Handshaking with Ek80 at : " + Ek80Endpoint.ToString());
             IPEndPoint remoteEp = new IPEndPoint(Ek80Endpoint, RemotePort);
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -264,9 +264,9 @@ namespace Snapfish.EkSeriesPubsubLibrary
         }
 
 
-        public void ConnectToRemoteEkDevice()
+        public void ConnectToRemoteEkDevice(string username="Simrad", string password="")
         {
-            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = "Name:Simrad;Password:\0".ToCharArray()};
+            ConnectRequest request = new ConnectRequest {Header = "CON\0".ToCharArray(), ClientInfo = ("Name:" + username + ";Password:" + password + "\0").ToCharArray()};
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPEndPoint remoteEndpoint = new IPEndPoint(Ek80Endpoint, (int) _remoteEkSeriesInfo.CommandPort);
             client.BeginConnect(remoteEndpoint, ConnectCallback, client);
@@ -278,7 +278,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             ReceiveSafeStruct<Ek80Response>(client);
             ReceiveDone.WaitOne();
 
-            Ek80Response response = (Ek80Response) _responseObject;
+             Ek80Response response = (Ek80Response) _responseObject;
             _connectRequestResponseStruct = ParseResultsFromEkSeriesDevice(new string(response.MsgResponse));
 
             #region DEBUG // IFDEBUG?
@@ -971,7 +971,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
             Console.WriteLine(message);
 #endif
         }
-
+        
         #region PARAMETER_GETTERS
 
         public string ApplicationName => _applicationName;

@@ -16,7 +16,7 @@ namespace Snapfish.Application
         private static Channel<SampleDataContainerClass> _sampleDataBoundedBuffer;
         private static Channel<TargetsIntegration> _targetsBiomassBoundedBuffer;
         public static Channel<StructIntegrationData> _biomassBoundedBuffer;
-        private readonly EkSeriesSocketDaemon _daemon = new EkSeriesSocketDaemon("10.218.68.118");
+        private readonly EkSeriesSocketDaemon _daemon;
 
         private string _applicationName;
         private string _applicationType;
@@ -25,7 +25,7 @@ namespace Snapfish.Application
         private string _latitude;
         private string _longitude;
 
-        public SnapfishRecorder()
+        public SnapfishRecorder(string ipaddr="")
         {
             _boundedBuffer = Channel.CreateBounded<Echogram>(new BoundedChannelOptions(BufferSize)
             {
@@ -54,9 +54,10 @@ namespace Snapfish.Application
                 SingleWriter = true,
                 SingleReader = false
             });
+            _daemon = new EkSeriesSocketDaemon(ipaddr);
         }
 
-        public void InstallDaemon()
+        public void InstallDaemon(string username="Simrad", string password="")
         {
             _daemon.HandshakeWithEkSeriesDevice();
             _daemon.ConnectToRemoteEkDevice();
