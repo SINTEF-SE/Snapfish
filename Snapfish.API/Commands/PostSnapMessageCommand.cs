@@ -42,13 +42,13 @@ namespace Snapfish.API.Commands
             {
                 var message = new SnapMessage
                 {
-                    OwnerID = sendingUser.ID,
-                    SenderID = sendingUser.ID,
+                    OwnerId = sendingUser.ID,
+                    SenderId = sendingUser.ID,
                     ReceiverEmails = messageDraft.ReceiverEmails,
                     Message = messageDraft.Message,
                     SentTimestamp = stamp,
                     Seen = false,
-                    SnapMetadataID = messageDraft.SnapMetadataID
+                    SnapMetadataId = messageDraft.SnapMetadataId
                 };
                 sendersMessage = message;
                 await _snapContext.SnapMessages.AddAsync(message);
@@ -70,13 +70,13 @@ namespace Snapfish.API.Commands
                 {
                     var message = new SnapMessage
                     {
-                        OwnerID = user.ID,
-                        SenderID = sendingUser.ID,
+                        OwnerId = user.ID,
+                        SenderId = sendingUser.ID,
                         ReceiverEmails = messageDraft.ReceiverEmails,
                         Message = messageDraft.Message,
                         SentTimestamp = stamp,
                         Seen = false,
-                        SnapMetadataID = messageDraft.SnapMetadataID
+                        SnapMetadataId = messageDraft.SnapMetadataId
                     };
                     await _snapContext.SnapMessages.AddAsync(message);
 
@@ -91,7 +91,7 @@ namespace Snapfish.API.Commands
             }
 
             await _snapContext.SaveChangesAsync();
-            return new CreatedAtRouteResult(nameof(SnapMessagesController.GetSnapMessage), new { id = sendersMessage.ID }, sendersMessage); 
+            return new CreatedAtRouteResult(nameof(SnapMessagesController.GetSnapMessage), new { id = sendersMessage.Id }, sendersMessage); 
         }
     }
 }

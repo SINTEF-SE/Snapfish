@@ -11,6 +11,6 @@ namespace Snapfish.API.ViewModels
         public string SenderEmail { get; set; }
         public string ReceiverEmails { get; set; }
         public string Message { get; set; }
-        public long SnapMetadataID { get; set; }
+        public long SnapMetadataId { get; set; }
     }
 }

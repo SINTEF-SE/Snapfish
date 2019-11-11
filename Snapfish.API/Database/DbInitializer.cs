@@ -32,8 +32,8 @@ namespace Snapfish.API.Database
 
             var metadata = new SnapMetadata[]
             {
-                new SnapMetadata{OwnerId=users[0].ID, Latitude="632448", Longitude="102433", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 08:01+0100"), Biomass="", Public = false},
-                new SnapMetadata{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass="", Public = true, PublicFrom=DateTime.Parse("2019-05-12 11:21+0100")}
+                new SnapMetadata{OwnerId=users[0].ID, Latitude="632448", Longitude="102433", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 08:01+0100"), Biomass="", SharePublic = false},
+                new SnapMetadata{OwnerId=users[0].ID, Latitude="632451", Longitude="102114", Source="EK80", Timestamp=DateTime.Parse("2019-05-12 09:21+0100"), Biomass="", SharePublic = true, SharePublicFrom=DateTime.Parse("2019-05-12 11:21+0100")}
             };
             foreach (SnapMetadata e in metadata)
             {
@@ -44,11 +44,11 @@ namespace Snapfish.API.Database
 
             var snaps = new SnapMessage[]
             {
-                new SnapMessage{SnapMetadataID = metadata[0].Id, Message="Mye fisk her! Vi har ikke plass til mer", OwnerID=users[1].ID, SenderID=users[0].ID,ReceiverEmails="ola@fiskinfo.no",SentTimestamp=DateTime.Parse("2019-05-12 08:04+0100")},
-                new SnapMessage{SnapMetadataID = metadata[0].Id, Message="Mye fisk her! Vi har ikke plass til mer", OwnerID=users[0].ID, SenderID=users[0].ID,ReceiverEmails="ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 08:04+0100")},
-                new SnapMessage{SnapMetadataID = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerID=users[0].ID, SenderID=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")},
-                new SnapMessage{SnapMetadataID = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerID=users[1].ID, SenderID=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")},
-                new SnapMessage{SnapMetadataID = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerID=users[2].ID, SenderID=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")}
+                new SnapMessage{SnapMetadataId = metadata[0].Id, Message="Mye fisk her! Vi har ikke plass til mer", OwnerId=users[1].ID, SenderId=users[0].ID,ReceiverEmails="ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 08:04+0100")},
+                new SnapMessage{SnapMetadataId = metadata[0].Id, Message="Mye fisk her! Vi har ikke plass til mer", OwnerId=users[0].ID, SenderId=users[0].ID,ReceiverEmails="ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 08:04+0100")},
+                new SnapMessage{SnapMetadataId = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerId=users[0].ID, SenderId=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")},
+                new SnapMessage{SnapMetadataId = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerId=users[1].ID, SenderId=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")},
+                new SnapMessage{SnapMetadataId = metadata[1].Id, Message="Her blir det torsk til middag!",  OwnerId=users[2].ID, SenderId=users[2].ID, ReceiverEmails="per@fiskinfo.no, ola@fiskinfo.no", SentTimestamp=DateTime.Parse("2019-05-12 09:32+0100")}
             };
             foreach (SnapMessage s in snaps)
             {

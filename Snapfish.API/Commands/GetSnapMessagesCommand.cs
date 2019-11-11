@@ -28,6 +28,7 @@ namespace Snapfish.API.Commands
             _snapContext = snapContext;
         }
 
+
         public async Task<IActionResult> ExecuteAsync(int userID, bool inbox,  bool snapmetadata, CancellationToken cancellationToken = default)
         {
             List<SnapMessage> messages = null;
@@ -38,14 +39,14 @@ namespace Snapfish.API.Commands
                 if (snapmetadata)
                 {
                     messages = await _snapContext.SnapMessages
-                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID != userID))
+                        .Where(msg => (msg.OwnerId == userID) && (msg.SenderId != userID))
                                 .Include(s => s.SnapMetadata)
                                 .Include(s => s.Sender)
                                 .ToListAsync();
                 } else
                 {
                     messages = await _snapContext.SnapMessages
-                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID != userID))
+                        .Where(msg => (msg.OwnerId == userID) && (msg.SenderId != userID))
                         .Include(s => s.Sender)
                         .ToListAsync();
 
@@ -55,7 +56,7 @@ namespace Snapfish.API.Commands
                 if (snapmetadata)
                 {
                     messages = await _snapContext.SnapMessages
-                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID == userID))
+                        .Where(msg => (msg.OwnerId == userID) && (msg.SenderId == userID))
                                 .Include(s => s.SnapMetadata)
                                 .Include(s => s.Sender)
                                 .ToListAsync();
@@ -63,7 +64,7 @@ namespace Snapfish.API.Commands
                 else
                 {
                     messages = await _snapContext.SnapMessages
-                        .Where(msg => (msg.OwnerID == userID) && (msg.SenderID == userID))
+                        .Where(msg => (msg.OwnerId == userID) && (msg.SenderId == userID))
                         .Include(s => s.Sender)
                         .ToListAsync();
 
@@ -72,6 +73,10 @@ namespace Snapfish.API.Commands
 
             if (messages == null)
                 return new NotFoundResult();
+            foreach(var message in messages)
+            {
+                message.SentTimestamp = DateTime.Parse(message.SentTimestamp.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
+            }
             return new OkObjectResult(messages);
         }
     }

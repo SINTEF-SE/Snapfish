@@ -8,13 +8,13 @@ namespace Snapfish.BL.Models
 {
     public class SnapMessage
     {
-        public long ID { get; set; }
-        public long OwnerID { get; set; }
-        public long SenderID { get; set; }
+        public long Id { get; set; }
+        public long OwnerId { get; set; }
+        public long SenderId { get; set; }
         public string ReceiverEmails { get; set; }
         public string Message { get; set; }
         public DateTime SentTimestamp { get; set; }
-        public long SnapMetadataID { get; set; }
+        public long SnapMetadataId { get; set; }
         public bool Seen { get; set; }
 
         public SnapMetadata SnapMetadata { get; set; }

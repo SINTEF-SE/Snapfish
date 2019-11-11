@@ -14,8 +14,8 @@ namespace Snapfish.BL.Models
         public string Biomass { get; set; }
         public string Source { get; set; }
 
-        public bool Public { get; set; }
-        public DateTime PublicFrom { get; set; }
+        public bool SharePublic { get; set; }
+        public DateTime SharePublicFrom { get; set; }
 
     }
 }

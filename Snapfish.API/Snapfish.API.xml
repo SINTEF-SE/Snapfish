@@ -40,12 +40,14 @@
             <response code="201">Snap and snap metadata entry was successfully created</response>
             <response code="400">The snap packet was invalid and no snap or snap metadata entry could be created</response>
         </member>
-        <member name="M:Snapfish.API.Controllers.SnapMessagesController.GetSnapMetadatas(Snapfish.API.Commands.IGetSnapMessagesCommand,System.Threading.CancellationToken,System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:Snapfish.API.Controllers.SnapMessagesController.GetSnapMessages(Snapfish.API.Commands.IGetSnapMessagesCommand,System.Threading.CancellationToken,System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Get all the snap messages for the specified user
             </summary>
             <param name="userId">The unique identifier of the user.</param>
-            <response code="200">All snap messages of the specified user was retrieved.</response>
+            <param name="inbox">Specifies whether to retrieve the inbox or outbox messages of the user.</param>
+            <param name="snapmetadata">Whether to include the snap metadata as part of the retrieve messages.</param>
+            <response code="200">All snap messages in the inbox or outbox of the specified user was retrieved.</response>
             <response code="404">The specified user was not found.</response>
         </member>
         <member name="M:Snapfish.API.Controllers.SnapMessagesController.GetSnapMessage(Snapfish.API.Commands.IGetSnapMessageCommand,System.Int64,System.Threading.CancellationToken)">
@@ -63,7 +65,7 @@
             <param name="command">The action command.</param>
             <param name="message">The snap message to create.</param>
             <param name="cancellationToken">The cancellation token used to cancel the HTTP request.</param>
-            <response code="201">Snap message entry was successfully created</response>
+            <response code="201">Snap message entry was successfully created. The new outbox entry for the message is returned.</response>
             <response code="400">The snap message was invalid and no entry could be created</response>
         </member>
         <member name="M:Snapfish.API.Controllers.SnapMessagesController.Delete(Snapfish.API.Commands.IDeleteSnapMessageCommand,System.Int32,System.Threading.CancellationToken)">
