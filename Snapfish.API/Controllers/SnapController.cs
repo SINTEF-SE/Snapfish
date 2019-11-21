@@ -61,6 +61,7 @@ namespace Snapfish.API.Controllers
         /// <response code="201">Snap and snap metadata entry was successfully created</response>
         /// <response code="400">The snap packet was invalid and no snap or snap metadata entry could be created</response>
         [HttpPost]
+        [RequestSizeLimit(1000000)]
         [ProducesResponseType(typeof(Snap), 201)]
         [ProducesResponseType(typeof(ModelStateDictionary), 400)]
         public Task<IActionResult> PostSnap(

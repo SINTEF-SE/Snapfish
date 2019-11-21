@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using Snapfish.API.Database;
+using Snapfish.BL.Models;
 
 namespace Snapfish.API.Commands
 {
@@ -35,7 +37,11 @@ namespace Snapfish.API.Commands
             //TODO: Add check for access right (either as owner, snap receier, or public)
             if (info == null)
                 return new NotFoundResult();
-            return new OkObjectResult(info);
+
+
+            var packet = JsonConvert.DeserializeObject<SnapPacket>(info.SnapPacketJson);
+
+            return new OkObjectResult(packet);
         }
     }
 }

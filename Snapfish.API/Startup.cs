@@ -15,6 +15,7 @@ using SintefSecure.Framework.SintefSecure.AspNetCore.OpenIdDict;
 using SintefSecureBoilerplate.DAL.Identity;
 using Snapfish.API.Database;
 using Snapfish.API.Constants;
+using Newtonsoft.Json.Serialization;
 
 namespace Snapfish.API
 {
@@ -91,7 +92,7 @@ namespace Snapfish.API
                 .AddApiExplorer()
                 .AddAuthorization()
                 .AddDataAnnotations()
-                .AddJsonFormatters()
+                .AddJsonFormatters(options => options.ContractResolver = new DefaultContractResolver())
                 .AddCustomJsonOptions(this.hostingEnvironment)
                 .AddCustomCors()
                 .AddVersionedApiExplorer(x => x.GroupNameFormat =
