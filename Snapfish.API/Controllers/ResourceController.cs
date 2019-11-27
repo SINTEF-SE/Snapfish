@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Validation;
 using SintefSecureBoilerplate.DAL.Identity;
 
-namespace Snapfish.API.API.Controllers
+namespace Snapfish.API.Controllers
 {
     [Route("[controller]")]
     [ApiController]

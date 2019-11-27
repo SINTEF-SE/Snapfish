@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API.Options
+﻿namespace Snapfish.API.Options
 {
     /// <summary>
     /// The dynamic response compression options for the application.

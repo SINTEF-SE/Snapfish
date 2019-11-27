@@ -13,5 +13,9 @@ namespace Snapfish.BL.Models
         public string Longitude { get; set; }
         public string Biomass { get; set; }
         public string Source { get; set; }
+
+        public bool SharePublic { get; set; }
+        public DateTime SharePublicFrom { get; set; }
+
     }
 }

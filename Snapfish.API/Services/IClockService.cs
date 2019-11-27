@@ -1,4 +1,4 @@
-﻿namespace Snapfish.API.API.Services
+﻿namespace Snapfish.API.Services
 {
     using System;
 

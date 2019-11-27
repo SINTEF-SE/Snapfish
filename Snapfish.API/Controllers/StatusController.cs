@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-namespace Snapfish.API.API.Controllers
+namespace Snapfish.API.Controllers
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Snapfish.API.API.Constants;
+    using Snapfish.API.Constants;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;

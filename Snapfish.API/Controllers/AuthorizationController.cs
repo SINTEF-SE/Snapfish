@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Collections.Generic;
-using Snapfish.API.API.Constants;
+using Snapfish.API.Constants;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 using OpenIddict.EntityFrameworkCore.Models;
 using SintefSecureBoilerplate.DAL.Identity;
 
-namespace Snapfish.API.API.Controllers
+namespace Snapfish.API.Controllers
 {               
     [ApiController]
     [ApiVersion("1.0")]

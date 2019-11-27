@@ -9,9 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
-using Snapfish.API.API.Options;
+using Snapfish.API.Options;
+using Snapfish.API.Database;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     public sealed class Program
     {
@@ -20,7 +21,7 @@ namespace Snapfish.API.API
         public static int LogAndRun(IWebHost webHost)
         {
             Log.Logger = BuildLogger(webHost);
-
+            InitSnapDB(webHost);
             try
             {
                 Log.Information("Starting application");
@@ -37,6 +38,25 @@ namespace Snapfish.API.API
             {
                 Log.CloseAndFlush();
             }
+        }
+
+
+        public static void InitSnapDB(IWebHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<SnapContext>();
+                    DbInitializer.Initialize(context);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "An error occurred while seeding the database.");
+                }
+            }
+
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
@@ -98,7 +118,7 @@ namespace Snapfish.API.API
 
         private static string GetAssemblyProductName() =>
             Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>().Product;
-        
+
         /// <summary>
         /// Configure Kestrel server limits from appsettings.json is not supported. So we manually copy them from config.
         /// See https://github.com/aspnet/KestrelHttpServer/issues/2216
@@ -107,27 +127,34 @@ namespace Snapfish.API.API
             WebHostBuilderContext builderContext,
             KestrelServerOptions options)
         {
-            var kestrelOptions = new KestrelServerOptions();
-            builderContext.Configuration.GetSection(nameof(ApplicationOptions.Kestrel)).Bind(kestrelOptions);
-            foreach (var property in typeof(KestrelServerLimits).GetProperties())
-            {
-                if (property.PropertyType == typeof(MinDataRate))
-                {
-                    var section = builderContext.Configuration.GetSection(
-                        $"{nameof(ApplicationOptions.Kestrel)}:{nameof(KestrelServerOptions.Limits)}");
-                    if (section.GetChildren().Any(x => string.Equals(x.Key, property.Name, StringComparison.Ordinal)))
-                    {
-                        var bytesPerSecond = section.GetValue<double>($"{property.Name}:{nameof(MinDataRate.BytesPerSecond)}");
-                        var gracePeriod = section.GetValue<TimeSpan>($"{property.Name}:{nameof(MinDataRate.GracePeriod)}");
-                        property.SetValue(options.Limits, new MinDataRate(bytesPerSecond, gracePeriod));
-                    }
-                }
-                else
-                {
-                    var value = property.GetValue(kestrelOptions.Limits);
-                    property.SetValue(options.Limits, value);
-                }
-            }
+            var source = new KestrelServerOptions();
+            builderContext.Configuration.GetSection(nameof(ApplicationOptions.Kestrel)).Bind(source);
+
+            var limits = options.Limits;
+            var sourceLimits = source.Limits;
+
+            var http2 = limits.Http2;
+            var sourceHttp2 = sourceLimits.Http2;
+
+            http2.HeaderTableSize = sourceHttp2.HeaderTableSize;
+            http2.InitialConnectionWindowSize = sourceHttp2.InitialConnectionWindowSize;
+            http2.InitialStreamWindowSize = sourceHttp2.InitialStreamWindowSize;
+            http2.MaxFrameSize = sourceHttp2.MaxFrameSize;
+            http2.MaxRequestHeaderFieldSize = sourceHttp2.MaxRequestHeaderFieldSize;
+            http2.MaxStreamsPerConnection = sourceHttp2.MaxStreamsPerConnection;
+
+            limits.KeepAliveTimeout = sourceLimits.KeepAliveTimeout;
+            limits.MaxConcurrentConnections = sourceLimits.MaxConcurrentConnections;
+            limits.MaxConcurrentUpgradedConnections = sourceLimits.MaxConcurrentUpgradedConnections;
+            limits.MaxRequestBodySize = sourceLimits.MaxRequestBodySize;
+            limits.MaxRequestBufferSize = sourceLimits.MaxRequestBufferSize;
+            limits.MaxRequestHeaderCount = sourceLimits.MaxRequestHeaderCount;
+            limits.MaxRequestHeadersTotalSize = sourceLimits.MaxRequestHeadersTotalSize;
+            limits.MaxRequestLineSize = sourceLimits.MaxRequestLineSize;
+            limits.MaxResponseBufferSize = sourceLimits.MaxResponseBufferSize;
+            limits.MinRequestBodyDataRate = sourceLimits.MinRequestBodyDataRate;
+            limits.MinResponseDataRate = sourceLimits.MinResponseDataRate;
+            limits.RequestHeadersTimeout = sourceLimits.RequestHeadersTimeout;
         }
     }
 }

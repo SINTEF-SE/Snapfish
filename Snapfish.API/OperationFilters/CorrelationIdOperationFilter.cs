@@ -4,7 +4,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 
-namespace Snapfish.API.API.OperationFilters
+namespace Snapfish.API.OperationFilters
 {
     /// <summary>
     /// Adds a Swashbuckle <see cref="NonBodyParameter"/> to all operations with a description of the X-Correlation-ID

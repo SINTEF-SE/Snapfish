@@ -13,9 +13,11 @@ using Microsoft.Extensions.DependencyInjection;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using SintefSecure.Framework.SintefSecure.AspNetCore.OpenIdDict;
 using SintefSecureBoilerplate.DAL.Identity;
-using Snapfish.API.API.Constants;
+using Snapfish.API.Database;
+using Snapfish.API.Constants;
+using Newtonsoft.Json.Serialization;
 
-namespace Snapfish.API.API
+namespace Snapfish.API
 {
     /// <summary>
     /// The main start-up class for the application.
@@ -52,7 +54,11 @@ namespace Snapfish.API.API
                 .AddResponseCaching()
                 .AddCustomResponseCompression()
                 .AddCustomStrictTransportSecurity()
-                .AddCustomSwagger()
+                .AddCustomSwagger() 
+                .AddDbContext<SnapContext>(options =>
+                {
+                    options.UseSqlServer(configuration.GetConnectionString("FiskinfoSnapfishConnection")); 
+                })
                 .AddDbContext<IdentityDatabaseContext>(options =>
                 {
                     // Configure the context to use Microsoft SQL Server.
@@ -86,7 +92,7 @@ namespace Snapfish.API.API
                 .AddApiExplorer()
                 .AddAuthorization()
                 .AddDataAnnotations()
-                .AddJsonFormatters()
+                .AddJsonFormatters(options => options.ContractResolver = new DefaultContractResolver())
                 .AddCustomJsonOptions(this.hostingEnvironment)
                 .AddCustomCors()
                 .AddVersionedApiExplorer(x => x.GroupNameFormat =
@@ -105,7 +111,7 @@ namespace Snapfish.API.API
         /// </summary>
         public void Configure(IApplicationBuilder application) =>
             application
-// Pass a GUID in a X-Correlation-ID HTTP header to set the HttpContext.TraceIdentifier.
+                // Pass a GUID in a X-Correlation-ID HTTP header to set the HttpContext.TraceIdentifier.
                 .UseCorrelationId()
                 .UseAuthentication()
                 .InitializeIdentityDatabase(hostingEnvironment,
@@ -122,7 +128,11 @@ namespace Snapfish.API.API
                     x => x.UseDeveloperErrorPages())
                 .UseStaticFilesWithCacheControl()
                 .UseMvc()
-                .UseSwagger()
+                .UseSwagger(
+                    options =>
+                    {
+                        options.PreSerializeFilters.Add((swaggerDoc, httpReq) => swaggerDoc.Host = httpReq.Host.Value);
+                    })
                 .UseCustomSwaggerUI();
     }
 }
