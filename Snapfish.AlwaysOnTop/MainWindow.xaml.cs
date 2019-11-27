@@ -137,7 +137,7 @@ namespace Snapfish.AlwaysOnTop
 
             return new SnapPacket
             {
-                OwnerId = 212, // TODO: Handle OwnerId when posting new Snap
+                OwnerId = 1, // TODO: Handle OwnerId when posting new Snap
                 Timestamp = DateTime.Now,
                 Latitude = recorder.GetLatitude(),
                 Longitude = recorder.GetLongitude(),
