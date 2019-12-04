@@ -39,10 +39,11 @@ namespace Snapfish.API.Commands
             };
 
             _snapContext.Snaps.Add(snap);
+            await _snapContext.SnapMetadatas.AddAsync(metadata);
 
             var metadata = new SnapMetadata
             {
-                //SnapId = snap.Id,
+                SnapId = snap.Id,
                 OwnerId = snapPacket.OwnerId,
                 Timestamp = snapPacket.Timestamp,
                 Latitude = snapPacket.Latitude,
