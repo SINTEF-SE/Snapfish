@@ -7,10 +7,14 @@
 
     <link rel="stylesheet" href="~/src/plot.css" />
     <style>
+        html {
+            height: 100%;
+        }
         body {
-            background-color: #ddd;;
+            height: 100%;
             margin: 0;
             padding: 0;
+            background-color: #ddd;
         }
     </style>
 </head>
@@ -27,7 +31,7 @@
 <script src="~/src/shaders.js"></script>
 <script src="~/src/WebGLUtil.js"></script>
 <script src="~/src/DataContainer.js"></script>
-<script src="~/src/plot.js"></script>
+<script src="~/src/Plot.js"></script>
 
 <script src="~/main.js"></script>
 @RenderSection("Scripts", required: false)
