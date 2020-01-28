@@ -32,40 +32,27 @@ class Plot {
         return true;
     }
 
+    // Main canvas to the left
     canvasSetup() {
         this.canvas = document.createElement('canvas');
         this.canvas.className = 'gl-plot-canvas';
         this.canvas.id = this.canvasId;
-        this.canvas.width = this.data.NumberOfSlices;
-        this.canvas.height = this.data.SliceHeight;
-        
-        /*
-        this.canvas.onmousedown = (e) => {
-            this.canvas.style.cursor = 'grabbing';
-            this.mouseDown = true;
-            this.lastClientY = e.clientY;
-        }
-        window.addEventListener('mouseup', () => {
-            this.mouseDown = false;
-            this.canvas.style.cursor = 'grab';
-        });
-        window.addEventListener('mousemove', (e) => this.handlePan(e));
-        window.addEventListener('wheel', (e) => this.handleZoom(e));
-        */
     }
 
+    // Canvas on right hand side showing details of last slice
     canvas2Setup() {
         this.canvas2 = document.createElement('canvas');
         this.canvas2.className = 'gl-plot-canvas-2';
         this.canvas2.id = this.canvasId + '-2';
         this.canvas2.width = 80;
-        this.canvas2.height = this.data.SliceHeight;
     }
 
     containerSetup() {
         this.addBaseHtml();
-        this.container.querySelector('.canvas-div').appendChild(this.canvas);
+        this.canvasParent = this.container.querySelector('.canvas-div');
+        this.canvasParent.appendChild(this.canvas);
         this.container.querySelector('.canvas-2-div').appendChild(this.canvas2);
+        this.resizeCanvas();
 
         this.setYAxis();
         // this.setXAxis();
@@ -73,8 +60,17 @@ class Plot {
         this.addRangeSlider();
         this.setColorScale();
 
-        const observer = new MutationObserver((mutations) => this.draw(true));
-        observer.observe(this.container, { attributes: true, attributeFilter: ['style']});
+        // make canvas size responsive
+        new ResizeObserver(_ => {
+            this.resizeCanvas();
+            this.draw(true)
+        }).observe(this.canvasParent);
+    }
+
+    resizeCanvas() {
+        const height = Math.floor(this.canvasParent.clientHeight);
+        this.canvas.height = height;
+        this.canvas2.height = height;
     }
 
     async webglSetup() {
@@ -126,6 +122,7 @@ class Plot {
         this.gl2 = gl;
     }
 
+    // Zoom handling library (not the best, might implement this myself)
     pzSetup() {
         new EasyPZ(document.getElementById(this.canvasId), transform => {
             if(this.zoomLevel == transform.scale) {
@@ -147,7 +144,7 @@ class Plot {
     }
 
     draw(throttle) {
-        if (throttle && Date.now() - this.preDraw < 45)
+        if (this.gl == undefined || this.gl2 == undefined || (throttle && performance.now() - this.preDraw < 20))
             return;
         
         const gl = this.gl;
@@ -183,7 +180,7 @@ class Plot {
         this.draw2();
 
         if (throttle)
-            this.preDraw = Date.now();
+            this.preDraw = performance.now();
     }
 
     draw2() {
@@ -216,33 +213,6 @@ class Plot {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    // todo: cleanup
-    handlePan(event) {
-        if (!this.mouseDown || this.lastClientY == event.clientY)
-            return;
-
-        this.viewportOffset += this.lastClientY - event.clientY;
-        
-        this.lastClientY = event.clientY;
-        this.draw(true);
-    }
-
-    handleZoom(event) {
-        if (event.target.id != this.canvasId)
-            return;
-
-        const originalExtent = this.canvas.height * this.zoomLevel;
-        this.zoomLevel += event.deltaY > 0 ? -0.045 : 0.045;
-        this.zoomLevel = this.zoomLevel < 1 ? 1 : this.zoomLevel;
-
-        const rect = this.canvas.getBoundingClientRect();
-        const yPct = 1 - (event.clientY - rect.top) / this.canvas.height;
-
-        this.viewportOffset += yPct * (originalExtent - this.canvas.height * this.zoomLevel);
-
-        this.draw();
-    }
-
     updateBiomass() {
         const dataIndex = (this.data.NumberOfSlices - 1) - Math.round(this.xOffset);
         this.container.querySelector(".current-biomass").innerHTML = this.data.Slices[dataIndex].Biomass;
@@ -268,6 +238,10 @@ class Plot {
         const offsetRatio = Math.abs(viewport[1]) / viewport[3];
         const top = dataHeight - diffRatio * dataHeight + dataHeight * offsetRatio;
         const bottom = top - (dataHeight - dataHeight * diffRatio);
+
+        // a bit hacky...
+        this.container.querySelector('.y-axis').style.height = this.canvas.height + "px";
+
         const labels = this.container.querySelector('.y-axis').children;
         const range = top - bottom;
         for (let i = 1; i < labels.length - 1; i++) {
@@ -275,7 +249,7 @@ class Plot {
         }
     }
 
-    // TODO: Reimplement to look similar to EK80
+    // TODO: Reimplement to look similar to EK80 (not used currently)
     setXAxis() {
         const axis = document.createElement('div');
         axis.className = 'x-labels';
@@ -350,6 +324,7 @@ class Plot {
         this.slider = slider;
     }
 
+    // not used currently
     addInterpolationToggle() {
         const container = this.container.querySelector('.interpolated-toggle');
         const toggle = document.createElement('input');
@@ -358,7 +333,7 @@ class Plot {
         container.appendChild(toggle);
         container.appendChild(document.createTextNode('Interpolated'));
     }
-
+    // not used currently
     setInterpolated(interpolated) {
         this.interpolated = interpolated;
         this.dataTexture = WebGLUtil.createDataTexture(this.gl, this.data, this.interpolated);

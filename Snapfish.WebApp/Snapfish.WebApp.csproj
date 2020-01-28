@@ -48,8 +48,4 @@
       <_ContentIncludedByDefault Remove="wwwroot\src\WebGLUtil.js" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="wwwroot\src\libs" />
-    </ItemGroup>
-
 </Project>
