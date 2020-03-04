@@ -21,7 +21,7 @@ namespace Snapfish.BL.Models.EkSeries
             {
                 if (nEchogramElement[i] != 0)
                 {
-                    nEchogramElement[i] = Convert.ToInt16(20 * Math.Log10(nEchogramElement[i]));   
+                    nEchogramElement[i] = Convert.ToInt16(20 * Math.Log10(Math.Abs(nEchogramElement[i])));   
                 }
             }
         }
