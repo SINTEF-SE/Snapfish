@@ -11,9 +11,20 @@ namespace Snapfish.BL.Models.EkSeries
         public double rangeStart;
     }
 
-    public struct EchogramArray
+    public class EchogramArray
     {
         public short[] nEchogramElement; //[30000]
+
+        public void ConvertRawDataToDecibels()
+        {
+            for (int i = 0; i < nEchogramElement.Length; i++)
+            {
+                if (nEchogramElement[i] != 0)
+                {
+                    nEchogramElement[i] = Convert.ToInt16(20 * Math.Log10(nEchogramElement[i]));   
+                }
+            }
+        }
     }
 
     public struct Echogram

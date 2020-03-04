@@ -67,6 +67,12 @@ namespace Snapfish.Console
             // This makes sure there are no slices without biomass or echo data
             var nSlices = Math.Min(echograms.Count, biomasses.Count);
             
+            // Convert the raw echo data to decibel(s)
+            foreach (var echo in echograms)
+            {
+                echo.EchogramArray.ConvertRawDataToDecibels();
+            }
+            
             var slices = new Slice[nSlices];
             foreach (var i in Enumerable.Range(0, nSlices))
             {
