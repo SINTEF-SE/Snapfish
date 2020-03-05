@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using Snapfish.BL.Models;
 using Snapfish.BL.Models.EkSeries;
+using Snapfish.EkSeriesPubsubLibrary.Domain.Subscriptions.Parameters;
 
 namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
 {
@@ -54,17 +55,18 @@ namespace Snapfish.EkSeriesPubsubLibrary.ConsolePlayground
                 }
                 else if (key.StartsWith("S"))
                 {
-                    daemon.SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
+                    EchogramSubscriptionParameters parameters = new EchogramSubscriptionParameters(daemon.ChannelId);
+                    daemon.SendSubscriptionRequest(parameters, EkSeriesRequestType.CreateDataSubscription);
                 } else if (key.StartsWith("i"))
                 {
-                    daemon.CreateEchogramSubscription(ref EchogramQueue);
+                    daemon.CreateDefaultEchogramSubscription(ref EchogramQueue);
                 } else if (key.StartsWith("k"))
                 {
-                    daemon.CreateTargetsBiomassSubscription(ref TargetsBiomassQueue);  
+                    daemon.CreateDefaultTargetsBiomassSubscription(ref TargetsBiomassQueue);  
                 } 
                 else if (key.StartsWith("l"))
                 {
-                    daemon.CreateBiomassSubscription(ref BiomassQueue);
+                    daemon.CreateDefaultBiomassSubscription(ref BiomassQueue);
                 }
                 else if (key.StartsWith("j"))
                 {

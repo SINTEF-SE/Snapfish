@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SintefSecure.Framework.SintefSecure.AspNetCore;
 using Snapfish.API.Controllers;
@@ -14,7 +10,6 @@ using Snapfish.BL.Models;
 
 namespace Snapfish.API.Commands
 {
-
     public interface IPostSnapCommand : IAsyncCommand<SnapPacket>
     {
     }
@@ -30,7 +25,7 @@ namespace Snapfish.API.Commands
             _snapContext = snapContext;
         }
 
-  
+
         public async Task<IActionResult> ExecuteAsync(SnapPacket snapPacket, CancellationToken cancellationToken = default)
         {
             var snap = new Snap
@@ -39,7 +34,6 @@ namespace Snapfish.API.Commands
             };
 
             _snapContext.Snaps.Add(snap);
-            await _snapContext.SnapMetadatas.AddAsync(metadata);
 
             var metadata = new SnapMetadata
             {
@@ -53,7 +47,7 @@ namespace Snapfish.API.Commands
             await _snapContext.SnapMetadatas.AddAsync(metadata);
             await _snapContext.SaveChangesAsync();
 
-            return new CreatedAtRouteResult(nameof(SnapController.GetSnap), new { id = snap.Id }, snapPacket); 
+            return new CreatedAtRouteResult(nameof(SnapController.GetSnap), new {id = snap.Id}, snapPacket);
         }
     }
 }

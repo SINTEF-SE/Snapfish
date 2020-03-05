@@ -18,6 +18,7 @@ using Snapfish.BL.Models;
 using Snapfish.BL.Models.EkSeries;
 using Snapfish.BL.Models.Logging;
 using Snapfish.EkSeriesPubsubLibrary.Domain;
+using Snapfish.EkSeriesPubsubLibrary.Domain.Subscriptions.Parameters;
 
 namespace Snapfish.EkSeriesPubsubLibrary
 {
@@ -103,14 +104,6 @@ namespace Snapfish.EkSeriesPubsubLibrary
         private static string _distance;
         private static string _noiseEstimate;
         private static string _clientTimeoutLimit;
-
-        //TODO: Make these configurable and storable
-
-        #region SubscriptionParameters
-
-        private EchogramConfiguration _echogramConfiguration = new EchogramConfiguration();
-
-        #endregion
 
         #endregion
 
@@ -376,65 +369,46 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
-        private string CreateDataSubscribableMethodInvocationString(EkSeriesDataSubscriptionType subscriptionType)
-        {
-            string retval = "";
-            switch (subscriptionType)
-            {
-                case EkSeriesDataSubscriptionType.BottomDetection:
-                    break;
-                case EkSeriesDataSubscriptionType.TargetStrengthTsDetection:
-                    break;
-                case EkSeriesDataSubscriptionType.TargetStrengthTsDetectionChirp:
-                    break;
-                case EkSeriesDataSubscriptionType.SampleData:
-                    retval = "SampleData," + "ChannelID=" + _channelID + ",SampleDataType=Sv,Range=100,RangeStart=10,";
-                    break;
-                case EkSeriesDataSubscriptionType.Echogram:
-                    retval = "Echogram," + "PixelCount=" + _echogramConfiguration.PixelCount + "," + "ChannelID=" + _channelID + "," + "Range=" + _echogramConfiguration.Range +
-                             "," + "RangeStart=" + _echogramConfiguration.RangeStart + ",";
-                    break;
-                case EkSeriesDataSubscriptionType.TargetsEchogram:
-                    retval = "TargetsIntegration,ChannelID=" + _channelID +
-                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
-                    break;
-                case EkSeriesDataSubscriptionType.Integration:
-                    retval = "Integration,ChannelID=" + _channelID + ",State=Start,Update=UpdatePing,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0";
-                    break;
-                case EkSeriesDataSubscriptionType.IntegrationChirp:
-                    break;
-                case EkSeriesDataSubscriptionType.TargetsIntegration:
-                    retval = "TargetsIntegration,ChannelID=" + _channelID +
-                             ",State=Start,Layertype=Surface,Range=100,Rangestart=10,Margin=0.5,SvThreshold=-100.0,MinTSValue=-55.0,MinEcholength=0.7,MaxEcholength=2.0,MaxGainCompensation=6.0,MaxPhasedeviation=7.0";
-                    break;
-                case EkSeriesDataSubscriptionType.NoiseSpectrum:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(subscriptionType), subscriptionType, null);
-            }
-
-            return retval;
-        }
-
-        public void SendSubscriptionRequest(EkSeriesRequestType requestType, EkSeriesDataSubscriptionType subscriptionType)
+        public void SendSubscriptionRequest(ISubscriptionParameter subscriptionParameter, EkSeriesRequestType requestType)
         {
             CommandRequest request = new CommandRequest {Header = "REQ\0".ToCharArray()};
-            string method = "";
-            string dataSubscriptionType = CreateDataSubscribableMethodInvocationString(subscriptionType);
-            switch (requestType)
+            string subscriptionDataRequest = subscriptionParameter.CreateSubscribableMethodInvocationString();
+            string subscriptionMethod = GetSubscriptionTypeString(requestType);
+            
+            request.MsgControl = (_currentActiveConnection.SequenceNumber + ",1,1\0\0\0\0").ToCharArray();
+            request.MsgRequest = ("<request>" +
+                                  "<clientInfo>" +
+                                  "<cid>" + _connectRequestResponseStruct.ClientID + "</cid>" +
+                                  "<rid>" + _currentActiveConnection.SequenceNumber + "</rid>" +
+                                  "</clientInfo>" +
+                                  "<type>invokeMethod</type>" +
+                                  "<targetComponent>RemoteDataServer</targetComponent>" +
+                                  "<method>" +
+                                  "<" + subscriptionMethod + ">" +
+                                  "<requestedPort>" + ReceivePort.ToString() + "</requestedPort>" +
+                                  "<dataRequest>" + subscriptionDataRequest + "</dataRequest>" +
+                                  "</" + subscriptionMethod + ">" +
+                                  "</method>" +
+                                  "</request>"
+                ).ToCharArray();
+            request.SetRequestType("Subscription");
+            request.SetMethodInvocationType(subscriptionParameter.GetSubscriptionDataType().ToString());
+            
+            // I think this can be removed
+            if (requestType == EkSeriesRequestType.CreateDataSubscription)
             {
-                case EkSeriesRequestType.CreateDataSubscription:
-                    method = "Subscribe";
-                    break;
-                case EkSeriesRequestType.ChangeDataSubscription:
-                    method = "ChangeSubscription";
-                    break;
-                case EkSeriesRequestType.DestroyDataSubscription:
-                    method = "Unsubscribe";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(requestType), requestType, null);
+                SubscribableRequestsInTransit.Add(new SentSubscribableRequest(subscriptionParameter.GetSubscriptionDataType(), _currentActiveConnection.SequenceNumber, request));
             }
+
+            EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber++);
+        }
+
+        public void SendSubscriptionRequest(EkSeriesRequestType requestType, EkSeriesDataSubscriptionType subscriptionType, ISubscriptionParameter subscriptionParameter)
+        {
+            CommandRequest request = new CommandRequest {Header = "REQ\0".ToCharArray()};
+            string subscriptionDataRequest = subscriptionParameter.CreateSubscribableMethodInvocationString();
+            string method = "";
+            method = GetSubscriptionTypeString(requestType);
 
 #if DEBUG
 
@@ -494,7 +468,7 @@ namespace Snapfish.EkSeriesPubsubLibrary
                                   "<method>" +
                                   "<" + method + ">" +
                                   "<requestedPort>" + ReceivePort.ToString() + "</requestedPort>" +
-                                  "<dataRequest>" + dataSubscriptionType + "</dataRequest>" +
+                                  "<dataRequest>" + subscriptionDataRequest + "</dataRequest>" +
                                   "</" + method + ">" +
                                   "</method>" +
                                   "</request>"
@@ -508,6 +482,21 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
 
             EnqueuePacketToQueue(request, _currentActiveConnection.SequenceNumber++);
+        }
+
+        private static string GetSubscriptionTypeString(EkSeriesRequestType requestType)
+        {
+            switch (requestType)
+            {
+                case EkSeriesRequestType.CreateDataSubscription:
+                    return "Subscribe";
+                case EkSeriesRequestType.ChangeDataSubscription:
+                    return "ChangeSubscription";
+                case EkSeriesRequestType.DestroyDataSubscription:
+                    return "Unsubscribe";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(requestType), requestType, null);
+            }
         }
 
         public void SendParameterRequestToEkSeriesDevice(EkSeriesParameterRequest ekSeriesParameterRequest, EkSeriesParameterType ekSeriesParameterType)
@@ -1205,28 +1194,32 @@ namespace Snapfish.EkSeriesPubsubLibrary
             }
         }
 
-        public void CreateEchogramSubscription(ref Channel<Echogram> echogramSubscriptionQueue)
+        public void CreateDefaultEchogramSubscription(ref Channel<Echogram> echogramSubscriptionQueue)
         {
             _echogramSubscriptionQueue = echogramSubscriptionQueue;
-            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Echogram);
+            EchogramSubscriptionParameters parameters = new EchogramSubscriptionParameters(_channelID);
+            SendSubscriptionRequest(parameters, EkSeriesRequestType.CreateDataSubscription);
         }
 
-        public void CreateSampleDataSubscription(ref Channel<SampleDataContainerClass> sampleDataSubscriptionQueue)
+        public void CreateDefaultSampleDataSubscription(ref Channel<SampleDataContainerClass> sampleDataSubscriptionQueue)
         {
             _sampleDataSubscriptionQueue = sampleDataSubscriptionQueue;
-            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.SampleData);
+            SampleDataSubscriptionParameters parameters = new SampleDataSubscriptionParameters(_channelID);
+            SendSubscriptionRequest(parameters, EkSeriesRequestType.CreateDataSubscription);
         }
 
-        public void CreateTargetsBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
+        public void CreateDefaultTargetsBiomassSubscription(ref Channel<TargetsIntegration> targetsIntegrationQueue)
         {
             _targetsIntegration = targetsIntegrationQueue;
-            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.TargetsIntegration);
+            TargetsIntegrationSubscriptionParameters parameters = new TargetsIntegrationSubscriptionParameters(_channelID);
+            SendSubscriptionRequest(parameters, EkSeriesRequestType.CreateDataSubscription);
         }
 
-        public void CreateBiomassSubscription(ref Channel<StructIntegrationData> IntegrationQueue)
+        public void CreateDefaultBiomassSubscription(ref Channel<StructIntegrationData> IntegrationQueue)
         {
             _integrationData = IntegrationQueue;
-            SendSubscriptionRequest(EkSeriesRequestType.CreateDataSubscription, EkSeriesDataSubscriptionType.Integration);
+            IntegrationSubscriptionParameters parameters = new IntegrationSubscriptionParameters(_channelID);
+            SendSubscriptionRequest(parameters, EkSeriesRequestType.CreateDataSubscription);
         }
 
         //_sampleDataSubscriptionQueue

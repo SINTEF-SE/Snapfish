@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Snapfish.BL.Models.EkSeries;
 using Snapfish.BL.Models.EkSeries.Parameters;
 
 namespace Snapfish.EkSeriesPubsubLibrary.Domain.Subscriptions.Parameters
 {
-    public class TargetsIntegrationParameters
+    public class TargetsIntegrationSubscriptionParameters : EKSeriesBaseParameter, ISubscriptionParameter
     {
+        private EkSeriesDataSubscriptionType _ekSeriesDataSubscriptionType = EkSeriesDataSubscriptionType.TargetsIntegration;
         public LayerType LayerType = LayerType.Surface;
         public IntegrationState IntegrationState = IntegrationState.Start;
         public Update Update = Update.UpdatePing;
@@ -35,5 +37,35 @@ namespace Snapfish.EkSeriesPubsubLibrary.Domain.Subscriptions.Parameters
 
         [Range(0, 100, ErrorMessage = "Value for {0} must be between {1} and {2}.")]
         public double MaxPhaseDeviation = 8.0;
+
+        public TargetsIntegrationSubscriptionParameters(string channelId) : base(channelId)
+        {
+        }
+
+        public string CreateSubscribableMethodInvocationString()
+        {
+            string retval = "";
+            retval += "TargetsIntegration,"
+                      + "ChannelID=" + GetChannelId() + ","
+                      + "State=" + IntegrationState + ","
+                      + "Layertype=" + LayerType + ","
+                      + "Range=" + Range + ","
+                      + "RangeStart=" + RangeStart + ","
+                      + "Margin=" + Margin + ","
+                      + "SvThreshold=" + SvThreshold +","
+                      + "MinTSValue=" + MinTSValue + ","
+                      + "MinEcholength=" + MinEchoLength + ","
+                      + "MaxEcholength=" + MaxEchoLength + ","
+                      + "MaxGainCompensation=" + MaxGainCompensation + ","
+                      + "MaxPhasedeviation=" + MaxPhaseDeviation;
+
+
+            return retval;
+        }
+
+        public EkSeriesDataSubscriptionType GetSubscriptionDataType()
+        {
+            return _ekSeriesDataSubscriptionType;
+        }
     }
 }

@@ -73,19 +73,19 @@ namespace Snapfish.Application
         
         public void CreateEchoSubscription()
         {
-            _daemon.CreateEchogramSubscription(ref _boundedBuffer);
+            _daemon.CreateDefaultEchogramSubscription(ref _boundedBuffer);
         }
 
         public void CreateBiomassSub()
         {
-            _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
+            _daemon.CreateDefaultBiomassSubscription(ref _biomassBoundedBuffer);
         }
         
         public void AttachBufferToEchogramSubscription()
         {
-            _daemon.CreateEchogramSubscription(ref _boundedBuffer);
+            _daemon.CreateDefaultEchogramSubscription(ref _boundedBuffer);
             //_daemon.CreateSampleDataSubscription(ref _sampleDataBoundedBuffer);
-            _daemon.CreateBiomassSubscription(ref _biomassBoundedBuffer);
+            _daemon.CreateDefaultBiomassSubscription(ref _biomassBoundedBuffer);
         }
 
         public void MakeDaemonFetchAttachGeoData()
