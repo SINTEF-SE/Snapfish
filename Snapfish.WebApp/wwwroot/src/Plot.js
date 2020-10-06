@@ -10,8 +10,6 @@ class Plot {
         this.viewportOffset = 0;
         this.mouseDown = false;
 
-        this.translateY = 0;
-        this.translateX = 0;
         this.xOffset = 0;
 
         this.ready = new Promise((resolve) => {
@@ -69,6 +67,8 @@ class Plot {
 
     resizeCanvas() {
         const height = Math.floor(this.canvasParent.clientHeight);
+        const width = this.data.NumberOfSlices;  // Math.floor(this.canvasParent.clientWidth);
+        this.canvas.width = width;
         this.canvas.height = height;
         this.canvas2.height = height;
     }
@@ -78,10 +78,10 @@ class Plot {
 
         if (gl === null)
             console.log("Unable to initialize WebGL");
-    
+
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-    
+
         const program = WebGLUtil.createShaderProgram(gl, vertexShaderText, fragmentShaderText);
         gl.useProgram(program);
 
@@ -102,12 +102,9 @@ class Plot {
     async webgl2Setup() {
         const gl = this.canvas2.getContext('webgl');
 
-        if (gl === null)
-            console.log("Unable to initialize WebGL");
-    
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-    
+
         const program = WebGLUtil.createShaderProgram(gl, vertexShaderText2, fragmentShaderText2);
         gl.useProgram(program);
 
@@ -122,37 +119,44 @@ class Plot {
         this.gl2 = gl;
     }
 
-    // Zoom handling library (not the best, might implement this myself)
+    // Set up pan and zoom handling
     pzSetup() {
-        new EasyPZ(document.getElementById(this.canvasId), transform => {
-            if(this.zoomLevel == transform.scale) {
-                this.xOffset -= this.translateX - transform.translateX;
-                this.xOffset = Math.min(this.xOffset, this.data.NumberOfSlices - 1);
-                this.xOffset = Math.max(this.xOffset, 0);
-            }
-            this.viewportOffset += this.translateY - transform.translateY;
-            this.zoomLevel = transform.scale;
+        d3.select("#" + this.canvasId).call(d3.zoom()
+            .scaleExtent([1, 8])
+            .translateExtent([[-this.canvas.clientWidth, 0], [this.canvas.clientWidth, this.canvas.clientHeight]])
+            .constrain((transform) => {
+                if (this.zoomLevel != transform.k) {
+                    transform.x = this.xOffset;
+                } else {
+                    transform.x = Math.min(transform.x, this.data.NumberOfSlices - 1);
+                    transform.x = Math.max(transform.x, 0);
+                }
+                transform.y = Math.max(transform.y, 0);
+                transform.y = Math.min(this.canvas.height * transform.k - this.canvas.height, transform.y)
+                return transform;
+            })
+            .on("zoom", ({transform}) => this.zoomed(transform)));
+    }
 
-            this.draw();
-            
-            this.translateY = transform.translateY;
-            this.translateX = transform.translateX;
-
-            this.updateBiomass();
-
-        }, { minScale: 1.0, maxScale: 8.0, bounds: { top: NaN, right: NaN, bottom: NaN, left: NaN } });
+    // Updates values for drawing based on transform and redraws canvases and biomass
+    zoomed(transform) {
+        this.xOffset = transform.x;
+        this.viewportOffset = -transform.y;
+        this.zoomLevel = transform.k;
+        this.draw();
+        this.updateBiomass();
     }
 
     draw(throttle) {
         if (this.gl == undefined || this.gl2 == undefined || (throttle && performance.now() - this.preDraw < 20))
             return;
-        
+
         const gl = this.gl;
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const width = this.canvas.width;
         const height = this.canvas.height;
-        this.checkViewportBounds();
+        // this.checkViewportBounds();
         gl.viewport(0, this.viewportOffset, width, height * this.zoomLevel);
 
         const texture = this.dataTexture;
@@ -208,7 +212,8 @@ class Plot {
         const uMaxLocation = gl.getUniformLocation(this.program2, 'max');
         gl.uniform1f(uMaxLocation, -1000);
         const uXOffsetLocation = gl.getUniformLocation(this.program2, 'xOffset');
-        gl.uniform1f(uXOffsetLocation, (this.xOffset / this.data.NumberOfSlices));
+        const halfPixelWidth = (1 / this.data.NumberOfSlices) / 2;
+        gl.uniform1f(uXOffsetLocation, (this.xOffset / this.data.NumberOfSlices) + halfPixelWidth);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
@@ -220,14 +225,14 @@ class Plot {
 
     checkViewportBounds() {
         // avoid panning beyond bottom
-        this.viewportOffset = this.viewportOffset > 0
-            ? 0
-            : this.viewportOffset;
+        this.viewportOffset = this.viewportOffset > 0 ?
+            0 :
+            this.viewportOffset;
 
         // avoid panning beyond top - todo: clean up
-        this.viewportOffset = this.canvas.height - this.viewportOffset > this.canvas.height * this.zoomLevel
-            ? this.canvas.height - this.canvas.height * this.zoomLevel
-            : this.viewportOffset;
+        this.viewportOffset = this.canvas.height - this.viewportOffset > this.canvas.height * this.zoomLevel ?
+            this.canvas.height - this.canvas.height * this.zoomLevel :
+            this.viewportOffset;
     }
 
     updateYLabels() {
@@ -245,7 +250,7 @@ class Plot {
         const labels = this.container.querySelector('.y-axis').children;
         const range = top - bottom;
         for (let i = 1; i < labels.length - 1; i++) {
-            labels[i].innerHTML = dataHeight - Math.round((range / 5) * (5-i) + bottom) + "m";
+            labels[i].innerHTML = dataHeight - Math.round((range / 5) * (5 - i) + bottom) + "m";
         }
     }
 

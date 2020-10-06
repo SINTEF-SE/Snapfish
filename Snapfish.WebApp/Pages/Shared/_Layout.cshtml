@@ -1,8 +1,8 @@
 ﻿<!DOCTYPE HTML>
-<html>
+<html lang="no-bok">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet" href="~/src/plot.css" />
@@ -20,20 +20,17 @@
 </head>
 <body>
 @RenderBody()
-
 <script>
     const snapId = @ViewData["SnapId"];
 </script>
+
 <div id="snap" class="echogram"></div>
 
-<script src="https://code.easypz.io/easypz.latest.js"></script>
-
+<script src="~/src/libs/d3.v6.min.js"></script>
 <script src="~/src/shaders.js"></script>
 <script src="~/src/WebGLUtil.js"></script>
 <script src="~/src/DataContainer.js"></script>
 <script src="~/src/Plot.js"></script>
-
 <script src="~/main.js"></script>
-@RenderSection("Scripts", required: false)
 </body>
 </html>
